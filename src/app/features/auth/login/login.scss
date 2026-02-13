@@ -1,0 +1,156 @@
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-card {
+  background: #ffffff;
+  padding: 3rem 2rem;
+  border-radius: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+
+  .brand-section {
+    margin-bottom: 2rem;
+    .logo-circle {
+      width: 70px; height: 70px;
+      background: linear-gradient(135deg, #1a1a1b, #434343);
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .welcome-text { font-size: 1.8rem; font-weight: 800; color: #1a1a1b; margin-bottom: 0.5rem; }
+    .subtitle { color: #65676b; font-size: 0.95rem; }
+  }
+}
+
+.form-field {
+  text-align: left;
+  margin-bottom: 1.5rem;
+
+  .field-label {
+    font-weight: 700; font-size: 0.75rem; color: #8e8e8e;
+    text-transform: uppercase; margin-bottom: 0.6rem; display: block;
+  }
+
+  .input-container {
+    background: #f4f4f5;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    transition: all 0.2s;
+
+    &.error { border-color: #ff4d4f; background: #fff; }
+    &:focus-within {
+      background: #fff;
+      border-color: #1a1a1b;
+      box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .custom-input {
+      width: 100%; border: none; background: transparent;
+      padding: 14px 16px; font-size: 1rem; font-weight: 500; outline: none;
+    }
+  }
+
+  .error-feedback {
+    color: #ff4d4f; font-size: 0.75rem; margin-top: 6px; font-weight: 500;
+  }
+}
+
+.primary-btn {
+  width: 100%; padding: 16px;
+  background: #1a1a1b;
+  color: white; border: none; border-radius: 16px;
+  font-size: 1.1rem; font-weight: 700;
+  cursor: pointer; transition: 0.3s;
+  margin: 1rem 0;
+
+  &:disabled { background: #e4e6eb; color: #bcc0c4; cursor: not-allowed; }
+  &:hover:not(:disabled) { transform: scale(1.02); background: #000; }
+}
+
+.footer-links {
+  margin-top: 1.5rem;
+  p { font-size: 0.9rem; color: #65676b; }
+  .link-text { color: #6e8efb; font-weight: 700; text-decoration: none; }
+  
+  .divider {
+    margin: 1.2rem 0;
+    display: flex; align-items: center; color: #ced0d4; font-size: 0.7rem; font-weight: 700;
+    &::before, &::after { content: ""; flex: 1; height: 1px; background: #e4e6eb; }
+    span { padding: 0 10px; }
+  }
+
+  .forgot-password { font-size: 0.85rem; color: #8e8e8e; text-decoration: none; }
+}
+
+.alert-overlay {
+  margin-bottom: 1.5rem;
+  .alert {
+    padding: 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;
+    &.error { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+
+  }
+}
+/* ... Keep your existing styles from the previous message ... */
+
+.password-container {
+  display: flex;
+  align-items: center;
+  padding-right: 8px !important; // Make room for the eye
+
+  .eye-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.footer-links {
+  .link-text {
+    color: #6e8efb;
+    font-weight: 700;
+    text-decoration: none;
+    position: relative;
+    transition: all 0.3s ease;
+
+    // The underline on hover effect
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px; // Gives it a modern cleaner look
+    }
+  }
+
+  .forgot-password:hover {
+    color: #1a1a1b;
+    text-decoration: underline;
+  }
+}
+
+// Adjusting custom-input inside password container to not overlap eye
+.password-container .custom-input {
+  flex: 1;
+}
+
+.animate-fade-in { animation: fadeIn 0.5s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

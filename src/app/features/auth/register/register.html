@@ -1,0 +1,58 @@
+<div class="auth-wrapper">
+  <div class="register-container">
+    
+    <div class="progress-section" *ngIf="currentStep < 4">
+      <div class="progress-header">
+        <!-- <span class="step-count">Step {{ currentStep }} of 3</span> -->
+        <!-- <span class="step-title">{{ getStepLabel() }}</span> -->
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="(currentStep / 3) * 100"></div>
+      </div>
+    </div>
+
+    <div class="alert-overlay">
+      <div *ngIf="errorMessage" class="alert error animate-slide-in">
+        <span class="icon">⚠️</span> {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage && currentStep !== 4" class="alert success animate-slide-in">
+        <span class="icon">✅</span> {{ successMessage }}
+      </div>
+    </div>
+
+    <div class="step-content">
+      <app-phone-step 
+        *ngIf="currentStep === 1" 
+        [phoneForm]="phoneForm" 
+        [isLoading]="isLoading" 
+        (onNext)="sendPhone()">
+      </app-phone-step>
+
+      <app-otp-step 
+        *ngIf="currentStep === 2" 
+        [otpForm]="otpForm" 
+        [isLoading]="isLoading" 
+        (onVerify)="verifyOtp()">
+      </app-otp-step>
+
+      <app-profile-step 
+        *ngIf="currentStep === 3" 
+        [profileForm]="profileForm" 
+        [isLoading]="isLoading" 
+        (onSubmit)="completeRegistration()">
+      </app-profile-step>
+
+      <div *ngIf="currentStep === 4" class="completion-card animate-fade-in">
+        <div class="success-animation">
+          <div class="check-wrapper">
+            <span class="checkmark">L</span>
+          </div>
+        </div>
+        <h2>Welcome, {{ profileForm.get('name')?.value }}!</h2>
+        <p>Setting up your feed...</p>
+        <div class="mini-loader"></div>
+      </div>
+    </div>
+
+  </div>
+</div>

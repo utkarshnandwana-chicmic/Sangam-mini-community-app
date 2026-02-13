@@ -1,0 +1,68 @@
+<div [formGroup]="profileForm" class="profile-card">
+  <div class="header">
+    <h2>Create Your Profile</h2>
+    <p>Join our community and start sharing.</p>
+  </div>
+
+  <div class="form-field" [class.error]="isInvalid('name')">
+    <label>Full Name</label>
+    <div class="input-wrapper">
+      <input type="text" formControlName="name" placeholder="e.g. Utkarsh Nandwana" />
+      <span class="status-icon" *ngIf="profileForm.get('name')?.valid">✔</span>
+    </div>
+    <div class="error-msg" *ngIf="isInvalid('name')">Name is required.</div>
+  </div>
+
+  <div class="form-field" [class.error]="isInvalid('email')">
+    <label>Email Address</label>
+    <div class="input-wrapper">
+      <input type="email" formControlName="email" placeholder="name@example.com" />
+      <span class="status-icon" *ngIf="profileForm.get('email')?.valid">✔</span>
+    </div>
+    <div class="error-msg" *ngIf="isInvalid('email')">Please enter a valid email.</div>
+  </div>
+
+  <div class="form-field" [class.error]="isInvalid('dob')">
+    <label>Date of Birth</label>
+    <input type="date" formControlName="dob" />
+    <div class="error-msg" *ngIf="isInvalid('dob')">Date of birth is required.</div>
+  </div>
+
+  <div class="form-field" [class.error]="isInvalid('password')">
+    <label>Password</label>
+    <div class="input-wrapper">
+      <input type="password" formControlName="password" placeholder="••••••••" />
+    </div>
+    <div class="password-guide" *ngIf="profileForm.get('password')?.dirty">
+      <p [class.valid]="!profileForm.get('password')?.hasError('pattern')">
+        {{ profileForm.get('password')?.hasError('pattern') ? '✕ Must be strong (A, a, 1, #)' : '✔ Password is secure' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="form-field">
+    <label>Gender</label>
+    <div class="gender-options">
+      <label class="radio-chip">
+        <input type="radio" formControlName="gender" [value]="1" />
+        <span>Male</span>
+      </label>
+      <label class="radio-chip">
+        <input type="radio" formControlName="gender" [value]="2" />
+        <span>Female</span>
+      </label>
+      <label class="radio-chip">
+        <input type="radio" formControlName="gender" [value]="3" />
+        <span>Other</span>
+      </label>
+    </div>
+  </div>
+
+  <button class="submit-btn" 
+          type="button" 
+          (click)="onSubmit.emit()" 
+          [disabled]="isLoading || profileForm.invalid">
+    <span *ngIf="!isLoading">Finish Registration</span>
+    <div class="spinner" *ngIf="isLoading"></div>
+  </button>
+</div>

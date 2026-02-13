@@ -1,0 +1,73 @@
+.profile-card {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  max-width: 400px;
+  margin: auto;
+
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+    h2 { font-weight: 800; color: #1a1a1a; margin-bottom: 0.5rem; }
+    p { color: #666; font-size: 0.9rem; }
+  }
+
+  .form-field {
+    margin-bottom: 1.5rem;
+    label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem; color: #444; }
+    
+    input[type="text"], input[type="email"], input[type="password"], input[type="date"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #eee;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      &:focus { border-color: #007bff; outline: none; background: #f8fbff; }
+    }
+
+    &.error input { border-color: #ff4d4f; background: #fff1f0; }
+    .error-msg { color: #ff4d4f; font-size: 0.75rem; margin-top: 4px; font-weight: 500; }
+  }
+
+  .gender-options {
+    display: flex;
+    gap: 10px;
+    .radio-chip {
+      flex: 1;
+      cursor: pointer;
+      input { display: none; }
+      span {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        border: 1.5px solid #eee;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: 0.2s;
+      }
+      input:checked + span { background: #007bff; border-color: #007bff; color: white; }
+    }
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+    &:disabled { background: #ccc; cursor: not-allowed; }
+    &:hover:not(:disabled) { background: #0056b3; transform: translateY(-1px); }
+  }
+}
+
+.password-guide {
+  font-size: 0.75rem;
+  margin-top: 5px;
+  .valid { color: #52c41a; }
+}
