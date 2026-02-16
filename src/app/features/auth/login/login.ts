@@ -20,7 +20,6 @@ export class LoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  errorMessage: string = '';
   hidePassword = true;
 
 
@@ -31,30 +30,63 @@ export class LoginComponent implements OnInit {
 )]]
   })
 
-  ngOnInit(): void {
-      if(this.authService.isLoggedIn()){
-        this.router.navigate(['/home']);
+ngOnInit(): void {
+
+  if (this.authService.isLoggedIn()) {
+    this.router.navigate(['/home']);
+  }
+
+  this.loginForm.get('email')?.valueChanges.subscribe(() => {
+    this.clearApiError('email');
+  });
+
+  this.loginForm.get('password')?.valueChanges.subscribe(() => {
+    this.clearApiError('password');
+  });
+}
+
+
+onSubmit(): void {
+
+  if (this.loginForm.invalid) {
+    this.loginForm.markAllAsTouched();
+    return;
+  }
+
+  const { email, password } = this.loginForm.value;
+
+  this.authService.login(email!, password!).subscribe({
+    next: () => {
+      this.router.navigate(['/home']);
+    },
+    error: (err) => {
+
+      const message = err?.error?.message || 'Login failed';
+
+      // 🔥 Smart error handling
+      if (message.toLowerCase().includes('email')) {
+        this.loginForm.get('email')?.setErrors({ apiError: message });
+      } 
+      else if (message.toLowerCase().includes('password')) {
+        this.loginForm.get('password')?.setErrors({ apiError: message });
+      } 
+      else {
+        // fallback
+        this.loginForm.setErrors({ apiError: message });
       }
-  }
-
-  onSubmit():void{
-    if(this.loginForm.valid){
-      const {email, password} = this.loginForm.value;
-      this.errorMessage = '';
-
-       this.authService.login(email!, password!).subscribe({
-        next: (res)=>{
-          this.router.navigate(['/home']);
-        },
-        error: (err)=>{
-          console.log('Full error: ', err);
-          
-        this.errorMessage = err.error?.message || 'Login failed';
-        }
-       })
-
     }
+  });
+}
 
+private clearApiError(controlName: string) {
+  const control = this.loginForm.get(controlName);
+
+  if (control?.errors?.['apiError']) {
+    delete control.errors['apiError'];
+    control.setErrors(Object.keys(control.errors).length ? control.errors : null);
   }
+}
+
+
 
 }

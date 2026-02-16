@@ -37,9 +37,18 @@ export class AuthService {
     );
   }
 
-  logout(): void {
-    localStorage.removeItem('token');
-  }
+logout() {
+  return this.api.post<any>(
+    API_ENDPOINTS.AUTH.LOGOUT,
+    {}
+  ).pipe(
+    tap({
+      next: () => localStorage.removeItem('token'),
+      error: () => localStorage.removeItem('token')
+    })
+  );
+}
+
 
   isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
@@ -91,4 +100,6 @@ export class AuthService {
       })
     );
   }
+
+  
 }

@@ -24,9 +24,21 @@
       />
     </div>
 
-    <div class="error-feedback" *ngIf="isInvalid('otp')">
-      <span *ngIf="otpForm.get('otp')?.hasError('required')">OTP is required to verify.</span>
-    </div>
+<div class="error-feedback" *ngIf="isInvalid('otp')">
+  <span *ngIf="otpForm.get('otp')?.hasError('required')">
+    OTP is required to verify.
+  </span>
+
+  <span *ngIf="otpForm.get('otp')?.hasError('minlength')">
+    OTP must be 6 digits.
+  </span>
+
+  <!-- 🔥 API Error -->
+  <span *ngIf="otpForm.get('otp')?.hasError('apiError')">
+    {{ otpForm.get('otp')?.getError('apiError') }}
+  </span>
+</div>
+
   </div>
 
   <button 
@@ -38,7 +50,7 @@
     <div class="loader-white" *ngIf="isLoading"></div>
   </button>
 
-  <div class="footer-links">
+  <!-- <div class="footer-links">
     <p>Didn't receive the code? <a href="javascript:void(0)" class="link-text">Resend</a></p>
-  </div>
+  </div> -->
 </div>

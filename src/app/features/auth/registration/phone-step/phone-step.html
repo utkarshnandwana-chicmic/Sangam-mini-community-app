@@ -28,7 +28,11 @@
 
     <div class="error-feedback" *ngIf="isInvalid('phone')">
       <span *ngIf="phoneForm.get('phone')?.hasError('required')">Phone number is required.</span>
-      <span *ngIf="phoneForm.get('phone')?.hasError('pattern')">Please enter a valid 10-digit number.</span>
+      <span *ngIf="phoneForm.get('phone')?.hasError('pattern')">Please enter a valid 10-digit number.</span>.
+      <span *ngIf="phoneForm.get('phone')?.hasError('apiError')">
+  {{ phoneForm.get('phone')?.getError('apiError') }}
+</span>
+
     </div>
   </div>
 
@@ -43,7 +47,7 @@
 
   <div class="footer-links">
     <p>Already have an account? <a routerLink="/login" class="link-text">Log In</a></p>
-    <div class="divider"><span>OR</span></div>
-    <div class="social-text">By continuing, you agree to our Terms & Privacy Policy.</div>
+    <!-- <div class="divider"><span>OR</span></div> -->
+    <!-- <div class="social-text">By continuing, you agree to our Terms & Privacy Policy.</div> -->
   </div>
 </div>

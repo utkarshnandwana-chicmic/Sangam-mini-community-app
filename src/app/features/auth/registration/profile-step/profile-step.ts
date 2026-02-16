@@ -18,6 +18,10 @@ export class ProfileStepComponent {
 
   isInvalid(controlName: string): boolean {
     const control = this.profileForm.get(controlName);
-    return !!(control && control.invalid && (control.dirty || control.touched));
+return !!(
+  control &&
+  control.invalid &&
+  (control.dirty || control.touched || control.hasError('apiError'))
+);
   }
 }

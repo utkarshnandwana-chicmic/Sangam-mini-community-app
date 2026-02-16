@@ -4,42 +4,93 @@
     <p>Join our community and start sharing.</p>
   </div>
 
+  <!-- FULL NAME -->
   <div class="form-field" [class.error]="isInvalid('name')">
     <label>Full Name</label>
     <div class="input-wrapper">
       <input type="text" formControlName="name" placeholder="e.g. Utkarsh Nandwana" />
       <span class="status-icon" *ngIf="profileForm.get('name')?.valid">✔</span>
     </div>
-    <div class="error-msg" *ngIf="isInvalid('name')">Name is required.</div>
+
+    <div class="error-msg" *ngIf="isInvalid('name')">
+      <span *ngIf="profileForm.get('name')?.hasError('required')">
+        Name is required.
+      </span>
+
+      <span *ngIf="profileForm.get('name')?.hasError('apiError')">
+        {{ profileForm.get('name')?.getError('apiError') }}
+      </span>
+    </div>
   </div>
 
+
+  <!-- EMAIL -->
   <div class="form-field" [class.error]="isInvalid('email')">
     <label>Email Address</label>
     <div class="input-wrapper">
       <input type="email" formControlName="email" placeholder="name@example.com" />
       <span class="status-icon" *ngIf="profileForm.get('email')?.valid">✔</span>
     </div>
-    <div class="error-msg" *ngIf="isInvalid('email')">Please enter a valid email.</div>
+
+    <div class="error-msg" *ngIf="isInvalid('email')">
+      <span *ngIf="profileForm.get('email')?.hasError('required')">
+        Email is required.
+      </span>
+
+      <span *ngIf="profileForm.get('email')?.hasError('email')">
+        Please enter a valid email.
+      </span>
+
+      <span *ngIf="profileForm.get('email')?.hasError('apiError')">
+        {{ profileForm.get('email')?.getError('apiError') }}
+      </span>
+    </div>
   </div>
 
+
+  <!-- DOB -->
   <div class="form-field" [class.error]="isInvalid('dob')">
     <label>Date of Birth</label>
     <input type="date" formControlName="dob" />
-    <div class="error-msg" *ngIf="isInvalid('dob')">Date of birth is required.</div>
+
+    <div class="error-msg" *ngIf="isInvalid('dob')">
+      <span *ngIf="profileForm.get('dob')?.hasError('required')">
+        Date of birth is required.
+      </span>
+
+      <span *ngIf="profileForm.get('dob')?.hasError('apiError')">
+        {{ profileForm.get('dob')?.getError('apiError') }}
+      </span>
+    </div>
   </div>
 
+
+  <!-- PASSWORD -->
   <div class="form-field" [class.error]="isInvalid('password')">
     <label>Password</label>
     <div class="input-wrapper">
       <input type="password" formControlName="password" placeholder="••••••••" />
     </div>
-    <div class="password-guide" *ngIf="profileForm.get('password')?.dirty">
-      <p [class.valid]="!profileForm.get('password')?.hasError('pattern')">
-        {{ profileForm.get('password')?.hasError('pattern') ? '✕ Must be strong (A, a, 1, #)' : '✔ Password is secure' }}
-      </p>
+
+    <div class="error-msg" *ngIf="isInvalid('password')">
+
+      <span *ngIf="profileForm.get('password')?.hasError('required')">
+        Password is required.
+      </span>
+
+      <span *ngIf="profileForm.get('password')?.hasError('pattern')">
+        Must contain: uppercase, lowercase, number & special character.
+      </span>
+
+      <span *ngIf="profileForm.get('password')?.hasError('apiError')">
+        {{ profileForm.get('password')?.getError('apiError') }}
+      </span>
+
     </div>
   </div>
 
+
+  <!-- GENDER -->
   <div class="form-field">
     <label>Gender</label>
     <div class="gender-options">
@@ -58,11 +109,15 @@
     </div>
   </div>
 
-  <button class="submit-btn" 
-          type="button" 
-          (click)="onSubmit.emit()" 
+
+  <!-- SUBMIT -->
+  <button class="submit-btn"
+          type="button"
+          (click)="onSubmit.emit()"
           [disabled]="isLoading || profileForm.invalid">
+
     <span *ngIf="!isLoading">Finish Registration</span>
     <div class="spinner" *ngIf="isLoading"></div>
+
   </button>
 </div>

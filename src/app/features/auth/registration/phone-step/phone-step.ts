@@ -17,6 +17,10 @@ export class PhoneStepComponent {
 
   isInvalid(controlName: string): boolean {
     const control = this.phoneForm.get(controlName);
-    return !!(control && control.invalid && (control.dirty || control.touched));
+return !!(
+  control &&
+  control.invalid &&
+  (control.dirty || control.touched || control.hasError('apiError'))
+);
   }
 }

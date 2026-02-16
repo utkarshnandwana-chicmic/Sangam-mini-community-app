@@ -8,11 +8,14 @@
       <p class="subtitle">Log in to see what your community is up to.</p>
     </div>
 
-    <div class="alert-overlay" *ngIf="errorMessage">
-      <div class="alert error animate-slide-in">
-        <span class="icon">⚠️</span> {{ errorMessage }}
-      </div>
-    </div>
+<div class="error-feedback" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+  <span *ngIf="loginForm.get('email')?.hasError('required')">Email is required.</span>
+  <span *ngIf="loginForm.get('email')?.hasError('email')">Invalid email format.</span>
+  <span *ngIf="loginForm.get('email')?.hasError('apiError')">
+    {{ loginForm.get('email')?.getError('apiError') }}
+  </span>
+</div>
+
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
       
@@ -52,10 +55,14 @@
       </svg>
     </button>
         </div>
-        <div class="error-feedback" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-          <span *ngIf="loginForm.get('password')?.hasError('required')">Password is required.</span>
-          <span *ngIf="loginForm.get('password')?.hasError('pattern')">Check password requirements.</span>
-        </div>
+<div class="error-feedback" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+  <span *ngIf="loginForm.get('password')?.hasError('required')">Password is required.</span>
+  <span *ngIf="loginForm.get('password')?.hasError('pattern')">Check password requirements.</span>
+  <span *ngIf="loginForm.get('password')?.hasError('apiError')">
+    {{ loginForm.get('password')?.getError('apiError') }}
+  </span>
+</div>
+
       </div>
 
       <button 

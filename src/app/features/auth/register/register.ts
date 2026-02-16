@@ -38,6 +38,7 @@ export class RegisterComponent {
     private router: Router
   ) {
     this.initializeForms();
+    this.setupApiErrorCleaner();
   }
 
   // --- UI ONLY HELPERS ---
@@ -54,6 +55,27 @@ export class RegisterComponent {
     };
     return stepLabels[this.currentStep] || '';
   }
+
+  private setupApiErrorCleaner() {
+
+  const forms = [this.phoneForm, this.otpForm, this.profileForm];
+
+  forms.forEach(form => {
+    Object.keys(form.controls).forEach(controlName => {
+      form.get(controlName)?.valueChanges.subscribe(() => {
+        const control = form.get(controlName);
+
+        if (control?.errors?.['apiError']) {
+          delete control.errors['apiError'];
+          control.setErrors(
+            Object.keys(control.errors).length ? control.errors : null
+          );
+        }
+      });
+    });
+  });
+}
+
 
   /**
    * Clears alerts to keep the UI clean when users re-try
@@ -106,10 +128,18 @@ export class RegisterComponent {
         }
         this.isLoading = false;
       },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = err.error?.message || 'Failed to send OTP';
-      },
+error: (err) => {
+  this.isLoading = false;
+
+  const message = err?.error?.message || 'Failed to send OTP';
+
+  const control = this.phoneForm.get('phone');
+
+  control?.setErrors({ apiError: message });
+  control?.markAsTouched();  
+}
+
+
     });
   }
 
@@ -132,10 +162,16 @@ export class RegisterComponent {
           this.isLoading = false;
           this.cdr.detectChanges();
         },
-        error: (err) => {
-          this.isLoading = false;
-          this.errorMessage = err?.error?.message || 'Invalid OTP';
-        },
+error: (err) => {
+  this.isLoading = false;
+
+  const message = err?.error?.message || 'Invalid OTP';
+
+  this.otpForm.get('otp')?.setErrors({
+    apiError: message
+  });
+},
+
       });
   }
 
@@ -167,10 +203,23 @@ export class RegisterComponent {
           this.router.navigate(['/home']);
         }, 1500);
       },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = err?.error?.message || "Registration failed";
-      }
+error: (err) => {
+  this.isLoading = false;
+
+  const backendErrors = err?.error?.errors;
+
+  if (backendErrors) {
+    Object.keys(backendErrors).forEach(field => {
+      this.profileForm.get(field)?.setErrors({
+        apiError: backendErrors[field]
+      });
+    });
+  } else {
+    const message = err?.error?.message || "Registration failed";
+    this.profileForm.setErrors({ apiError: message });
+  }
+}
+
     });
   }
 }
