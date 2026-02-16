@@ -101,5 +101,49 @@ logout() {
     );
   }
 
+  forgotPasswordPhone(phone: string, countryCode: string) {
+
+  const payload = {
+    phone,
+    countryCode,
+    languagePreference: 1
+  };
+
+  return this.api.post<any>(
+    API_ENDPOINTS.AUTH.FORGOT_PASSWORD_PHONE,
+    payload
+  );
+}
+
+verifyForgotPhoneOtp(resetToken: string, otp: string) {
+
+  const payload = {
+    resetToken,
+    otp,
+    languagePreference: 1
+  };
+
+  return this.api.post<any>(
+    API_ENDPOINTS.AUTH.FORGOT_PASSWORD_PHONE_VERIFY,
+    payload
+  );
+}
+
+
+resetPhonePassword(resetPasswordToken: string, newPassword: string) {
+
+  const payload = {
+    resetPasswordToken,
+    newPassword,
+    languagePreference: 1
+  };
+
+  return this.api.post<any>(
+    API_ENDPOINTS.AUTH.RESET_PASSWORD_PHONE,
+    payload
+  );
+}
+
+
   
 }
