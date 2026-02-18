@@ -8,5 +8,20 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD_PHONE: '/v1/user/forgotPassword/phone',
     FORGOT_PASSWORD_PHONE_VERIFY: '/v1/user/forgotPassword/phone/verify',
     RESET_PASSWORD_PHONE: '/v1/user/resetPassword/phone',
+    CHECK_USERNAME: '/v1/user/username/check'
+
   },
+  USER: {
+    DETAILS: '/v1/user/details',
+    GET_ALL: '/v1/user',
+    UPDATE: '/v1/user/register'
+  },
+  POST : {
+    GET_ALL: '/v2/post',
+    LIKE_TOGGLE: 'v1/post/like',
+    VIEW: '/v1/post/view'
+  },
+  FILE:{
+    UPLOAD: '/v1/file/upload'
+  }
 };

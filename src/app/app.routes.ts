@@ -25,10 +25,12 @@ export const routes: Routes = [
         path: 'home',
         loadComponent: () => import('./features/home/home/home').then((m) => m.Home),
       },
-      {
-        path: 'profile',
-        loadComponent: () => import('./features/profile/profile/profile').then((m) => m.Profile),
-      },
+{
+  path: 'profile',
+  loadChildren: () =>
+    import('./features/profile/profile.routes')
+      .then(m => m.PROFILE_ROUTES)
+},
       {
         path: 'search',
         loadComponent: () => import('./features/search/search/search').then((m) => m.Search),

@@ -1,0 +1,182 @@
+:host {
+  display: block;
+  --ig-gray: #8e8e8e;
+  --ig-border: #efefef;
+  --ig-primary: #0095f6;
+  --ig-success: #059669;
+  --premium-gradient: linear-gradient(45deg, #f09433 0%, #dc2743 50%, #bc1888 100%);
+}
+
+.header-wrapper {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  padding: 40px 0;
+  border-bottom: 1px solid var(--ig-border);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 20px 16px;
+    gap: 24px;
+  }
+}
+
+/* --- Avatar Styling --- */
+.avatar-col {
+  display: flex;
+  justify-content: center;
+
+  .avatar-ring {
+    position: relative;
+    width: 154px;
+    height: 154px;
+    border-radius: 50%;
+    padding: 4px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.premium-ring {
+      background: var(--premium-gradient);
+      animation: rotateGradient 4s linear infinite;
+      background-size: 200% 200%;
+    }
+
+    .avatar-image, .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #fff;
+      background: #fff;
+    }
+
+    .avatar-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      span { font-size: 64px; font-weight: 800; color: #262626; }
+    }
+
+    @media (max-width: 768px) {
+      width: 88px;
+      height: 88px;
+      .avatar-placeholder span { font-size: 32px; }
+    }
+  }
+}
+
+/* --- Info Column --- */
+.info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    
+    .username {
+      font-size: 28px;
+      font-weight: 300;
+      color: #262626;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      .verify-badge { width: 24px; height: 24px; }
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+
+      .btn {
+        padding: 8px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s ease;
+
+        &-primary { background: var(--ig-primary); color: white; &:hover { background: #1877f2; } }
+        &-secondary { background: #efefef; color: #262626; &:hover { background: #dbdbdb; } }
+      }
+
+      .btn-icon {
+        background: none; border: none; cursor: pointer; padding: 4px; color: #262626;
+        svg { width: 24px; height: 24px; }
+        &:hover { opacity: 0.6; }
+      }
+    }
+  }
+}
+
+/* --- Bio Block --- */
+.bio-block {
+  .name-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+
+    .real-name { font-size: 16px; font-weight: 700; margin: 0; color: #262626; }
+    .plan-badge {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 4px; background: #f8fafc;
+      border: 1px solid #e2e8f0; color: #64748b;
+    }
+  }
+
+  .bio-text { font-size: 14px; color: #262626; line-height: 1.5; margin-bottom: 12px; max-width: 450px; }
+
+  .links-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+    font-size: 14px;
+
+    .link-item { color: #00376b; text-decoration: none; font-weight: 600; &:hover { text-decoration: underline; } }
+    .meta-item { color: #262626; }
+    .icon { margin-right: 4px; }
+  }
+
+  .footer-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--ig-gray);
+  }
+
+  /* --- Premium Wallet Pill --- */
+  .wallet-pill {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    gap: 12px;
+
+    .wallet-icon { font-size: 20px; }
+    .wallet-details {
+      display: flex;
+      flex-direction: column;
+      .label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
+      .value { font-size: 15px; font-weight: 700; color: var(--ig-success); }
+    }
+  }
+}
+
+@keyframes rotateGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes scaleIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }

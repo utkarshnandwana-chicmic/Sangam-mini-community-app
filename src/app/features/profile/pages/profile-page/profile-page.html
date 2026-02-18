@@ -1,0 +1,50 @@
+<div class="layout-container">
+  
+  <div *ngIf="loading$ | async" class="state-layer loading">
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="error$ | async as error" class="state-layer error">
+    <div class="error-toast">
+      <span class="icon">⚠️</span>
+      <span>{{ error }}</span>
+    </div>
+  </div>
+
+  <main class="profile-content" *ngIf="profile$ | async as profile">
+    
+    <app-profile-header 
+      [profile]="profile">
+    </app-profile-header>
+
+    <div class="content-body" *ngIf="posts$ | async as posts">
+      
+      <app-profile-stats
+        class="stats-section"
+  [postsCount]="(postsCount$ | async) ?? 0"
+  [followerCount]="(followerCount$ | async) ?? 0"
+  [followingCount]="(followingCount$ | async) ?? 0">
+      </app-profile-stats>
+
+      <div class="grid-section">
+        <div class="tabs">
+          <button class="tab active">
+            <span class="icon">▦</span> POSTS
+          </button>
+          <button class="tab">
+            <span class="icon">bookmark_border</span> SAVED
+          </button>
+        </div>
+
+
+<app-profile-posts-grid
+  [posts]="(posts$ | async) ?? []"
+  (toggleLike)="onToggleLike($event)"
+  (viewPost)="onViewPost($event)">
+</app-profile-posts-grid>
+
+      </div>
+
+    </div>
+  </main>
+</div>

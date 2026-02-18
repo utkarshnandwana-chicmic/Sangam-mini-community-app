@@ -1,0 +1,101 @@
+<div class="edit-profile-wrapper">
+  <div class="profile-card">
+    <div class="header">
+      <h2>Edit Profile</h2>
+      <p>Keep your information up to date.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-scroll-container">
+        <div class="profile-avatar-section">
+
+  <div class="avatar-preview">
+    <img
+      [src]="previewUrl || (profile.profilePicture | imageUrl)"
+      class="avatar-img"
+    />
+  </div>
+
+  <label for="profileImageInput" class="upload-btn">
+    Change Photo
+  </label>
+
+  <input
+    id="profileImageInput"
+    type="file"
+    accept="image/*"
+    (change)="onFileChange($event)"
+    style="display: none;"
+  />
+
+</div>
+
+        
+        <div class="section-divider"><span>Identity</span></div>
+
+        <div class="form-field" [class.error]="form.get('name')?.touched && form.get('name')?.invalid">
+          <label for="name">Full Name</label>
+          <div class="input-wrapper">
+            <input id="name" type="text" formControlName="name" placeholder="Enter your name" />
+          </div>
+          <div class="field-status" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">
+            <span class="error-msg" *ngIf="form.get('name')?.hasError('required')">Name is required.</span>
+          </div>
+        </div>
+
+        <div class="form-field" [class.error]="form.get('userName')?.touched && form.get('userName')?.invalid">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <input id="username" type="text" formControlName="userName" placeholder="Choose a username" />
+            <div class="inline-feedback">
+              <div class="small-spinner" *ngIf="form.get('userName')?.pending"></div>
+              <span class="check-icon" *ngIf="form.get('userName')?.valid && form.get('userName')?.value && !form.get('userName')?.pending">✔</span>
+            </div>
+          </div>
+          <div class="field-status">
+            <span class="checking" *ngIf="form.get('userName')?.pending">Checking availability...</span>
+            <span class="available" *ngIf="form.get('userName')?.valid && form.get('userName')?.value && !form.get('userName')?.pending && form.get('userName')?.dirty">Username is available!</span>
+            <div class="error-msg" *ngIf="form.get('userName')?.touched && form.get('userName')?.invalid">
+              <span *ngIf="form.get('userName')?.hasError('required')">Username is required.</span>
+              <span *ngIf="form.get('userName')?.hasError('usernameTaken')">Username already taken.</span>
+              <span *ngIf="form.get('userName')?.hasError('pattern')">Only letters, numbers, dots and underscores allowed.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>About You</span></div>
+
+        <div class="form-field">
+          <label for="description">Bio</label>
+          <div class="input-wrapper">
+            <textarea id="description" formControlName="description" rows="3" placeholder="Tell something about yourself..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="link">Website</label>
+          <div class="input-wrapper">
+            <input id="link" type="text" formControlName="link" placeholder="https://yourwebsite.com" />
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="custom-checkbox">
+            <input type="checkbox" formControlName="privateAccount" />
+            Private Account
+          </label>
+          <small class="helper-text">Only approved followers can see your posts.</small>
+        </div>
+
+        <div class="field-status" *ngIf="form.errors?.['apiError']">
+          <span class="error-msg global-center">{{ form.errors?.['apiError'] }}</span>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="form.invalid || form.pending || (!form.dirty && !imageChanged) || loading">
+        <span *ngIf="!loading">Save Changes</span>
+        <div class="small-spinner white" *ngIf="loading"></div>
+      </button>
+    </form>
+  </div>
+</div>

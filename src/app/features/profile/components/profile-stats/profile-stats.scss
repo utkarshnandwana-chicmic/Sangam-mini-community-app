@@ -1,0 +1,45 @@
+/* profile-stats.scss */
+:host {
+  display: block;
+}
+
+.stats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 40px;
+  font-size: 16px;
+  color: #262626;
+
+  @media (max-width: 736px) {
+    justify-content: space-around;
+    padding: 12px 0;
+    border-top: 1px solid #dbdbdb;
+    border-bottom: 1px solid #dbdbdb;
+    gap: 0;
+  }
+
+  .stat-item {
+    display: flex;
+    gap: 6px;
+    
+    @media (max-width: 736px) {
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .count {
+      font-weight: 600;
+    }
+    
+    .label {
+      color: #262626;
+      @media (max-width: 736px) {
+        color: #8e8e8e;
+        font-size: 12px;
+      }
+    }
+  }
+}

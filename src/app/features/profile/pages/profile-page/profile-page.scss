@@ -1,0 +1,97 @@
+/* profile-page.scss */
+:host {
+  display: block;
+  --bg-body: #fafafa; // Instagram-like off-white
+  --text-primary: #262626;
+  --text-secondary: #8e8e8e;
+  --accent: #0095f6;
+  --border: #dbdbdb;
+}
+
+.layout-container {
+  min-height: 100vh;
+  background-color: var(--bg-body);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-primary);
+}
+
+.profile-content {
+  max-width: 975px; /* Standard social media container width */
+  margin: 0 auto;
+  padding: 0 20px 4rem;
+  
+  @media (max-width: 768px) {
+    padding: 0 0 4rem; /* Full width on mobile */
+  }
+}
+
+.content-body {
+  margin-top: 2rem;
+}
+
+.grid-section {
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+  
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-bottom: 1rem;
+    
+    .tab {
+      background: none;
+      border: none;
+      border-top: 1px solid transparent;
+      margin-top: -1px; /* Overlap border */
+      padding: 12px 0;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+
+      &.active {
+        border-top-color: var(--text-primary);
+        color: var(--text-primary);
+      }
+      
+      .icon { font-size: 14px; font-family: 'Material Icons', sans-serif; }
+    }
+  }
+}
+
+/* Loading & Error States */
+.state-layer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+  
+  &.loading .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: var(--text-secondary);
+    animation: spin 0.8s linear infinite;
+  }
+  
+  &.error .error-toast {
+    background: #fff;
+    border: 1px solid #ffcccb;
+    color: #d8000c;
+    padding: 12px 24px;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

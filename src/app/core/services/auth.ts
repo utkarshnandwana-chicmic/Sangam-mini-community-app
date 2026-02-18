@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { tap } from 'rxjs';
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '../../constants/api-endpoints';
+import { RegisterRequest } from '../model/auth.model';
 
 
 @Injectable({
@@ -82,14 +83,13 @@ logout() {
     );
   }
 
-  completeRegister(payload: any) {
+  completeRegister(payload: RegisterRequest) {
 
     return this.api.post<any>(
       API_ENDPOINTS.AUTH.REGISTER,
       payload
     ).pipe(
       tap((res) => {
-        console.log('REGISTER RESPONSE:', res);
 
         const finalToken = res?.data?.token;
 
@@ -143,6 +143,29 @@ resetPhonePassword(resetPasswordToken: string, newPassword: string) {
     payload
   );
 }
+
+getUserId(): string | null {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+checkUsername(username: string) {
+  return this.api.post<any>(
+    API_ENDPOINTS.AUTH.CHECK_USERNAME,
+    {
+      username,
+      languagePreference: 1
+    }
+  );
+}
+
 
 
   

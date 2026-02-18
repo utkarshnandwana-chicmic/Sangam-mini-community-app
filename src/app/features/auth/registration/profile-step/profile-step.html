@@ -4,120 +4,154 @@
     <p>Join our community and start sharing.</p>
   </div>
 
-  <!-- FULL NAME -->
-  <div class="form-field" [class.error]="isInvalid('name')">
-    <label>Full Name</label>
-    <div class="input-wrapper">
-      <input type="text" formControlName="name" placeholder="e.g. Utkarsh Nandwana" />
-      <span class="status-icon" *ngIf="profileForm.get('name')?.valid">✔</span>
+  <div class="form-scroll-container">
+
+
+    <div class="section-divider"><span>Basic Information</span></div>
+
+    <div class="form-field" [class.error]="isInvalid('name')">
+      <label>Full Name *</label>
+      <div class="input-wrapper">
+        <input type="text" formControlName="name" placeholder="e.g. Utkarsh Nandwana" />
+      </div>
+      <div class="field-status" *ngIf="isInvalid('name')">
+        <span class="error-msg" *ngIf="profileForm.get('name')?.hasError('required')">Name is required.</span>
+      </div>
     </div>
 
-    <div class="error-msg" *ngIf="isInvalid('name')">
-      <span *ngIf="profileForm.get('name')?.hasError('required')">
-        Name is required.
-      </span>
-
-      <span *ngIf="profileForm.get('name')?.hasError('apiError')">
-        {{ profileForm.get('name')?.getError('apiError') }}
-      </span>
-    </div>
-  </div>
-
-
-  <!-- EMAIL -->
-  <div class="form-field" [class.error]="isInvalid('email')">
-    <label>Email Address</label>
-    <div class="input-wrapper">
-      <input type="email" formControlName="email" placeholder="name@example.com" />
-      <span class="status-icon" *ngIf="profileForm.get('email')?.valid">✔</span>
+    <div class="form-field" [class.error]="isInvalid('userName')">
+      <label>Username *</label>
+      <div class="input-wrapper">
+        <input type="text" formControlName="userName" placeholder="e.g. utkarsh123" />
+        <div class="inline-feedback">
+          <div class="small-spinner" *ngIf="profileForm.get('userName')?.pending"></div>
+          <span class="check-icon" *ngIf="profileForm.get('userName')?.valid && profileForm.get('userName')?.value && !profileForm.get('userName')?.pending">✔</span>
+        </div>
+      </div>
+      <div class="field-status">
+        <span class="checking" *ngIf="profileForm.get('userName')?.pending">Checking availability...</span>
+        <span class="available" *ngIf="profileForm.get('userName')?.valid && profileForm.get('userName')?.value && !profileForm.get('userName')?.pending">Username is available!</span>
+        <span class="error-msg" *ngIf="isInvalid('userName') && profileForm.get('userName')?.hasError('usernameTaken')">Username is already taken.</span>
+        <span class="error-msg" *ngIf="isInvalid('userName') && profileForm.get('userName')?.hasError('required')">Username is required.</span>
+      </div>
     </div>
 
-    <div class="error-msg" *ngIf="isInvalid('email')">
-      <span *ngIf="profileForm.get('email')?.hasError('required')">
-        Email is required.
-      </span>
-
-      <span *ngIf="profileForm.get('email')?.hasError('email')">
-        Please enter a valid email.
-      </span>
-
-      <span *ngIf="profileForm.get('email')?.hasError('apiError')">
-        {{ profileForm.get('email')?.getError('apiError') }}
-      </span>
-    </div>
-  </div>
-
-
-  <!-- DOB -->
-  <div class="form-field" [class.error]="isInvalid('dob')">
-    <label>Date of Birth</label>
-    <input type="date" formControlName="dob" />
-
-    <div class="error-msg" *ngIf="isInvalid('dob')">
-      <span *ngIf="profileForm.get('dob')?.hasError('required')">
-        Date of birth is required.
-      </span>
-
-      <span *ngIf="profileForm.get('dob')?.hasError('apiError')">
-        {{ profileForm.get('dob')?.getError('apiError') }}
-      </span>
-    </div>
-  </div>
-
-
-  <!-- PASSWORD -->
-  <div class="form-field" [class.error]="isInvalid('password')">
-    <label>Password</label>
-    <div class="input-wrapper">
-      <input type="password" formControlName="password" placeholder="••••••••" />
+    <div class="form-field" [class.error]="isInvalid('email')">
+      <label>Email Address *</label>
+      <div class="input-wrapper">
+        <input type="email" formControlName="email" placeholder="name@example.com" />
+      </div>
+      <div class="field-status" *ngIf="isInvalid('email')">
+        <span class="error-msg" *ngIf="profileForm.get('email')?.hasError('required')">Email is required.</span>
+        <span class="error-msg" *ngIf="profileForm.get('email')?.hasError('email')">Enter a valid email.</span>
+      </div>
     </div>
 
-    <div class="error-msg" *ngIf="isInvalid('password')">
-
-      <span *ngIf="profileForm.get('password')?.hasError('required')">
-        Password is required.
-      </span>
-
-      <span *ngIf="profileForm.get('password')?.hasError('pattern')">
-        Must contain: uppercase, lowercase, number & special character.
-      </span>
-
-      <span *ngIf="profileForm.get('password')?.hasError('apiError')">
-        {{ profileForm.get('password')?.getError('apiError') }}
-      </span>
-
+    <div class="form-field" [class.error]="isInvalid('password')">
+      <label>Password *</label>
+      <div class="input-wrapper">
+        <input type="password" formControlName="password" placeholder="••••••••" />
+      </div>
+      <div class="field-status" *ngIf="isInvalid('password')">
+        <span class="error-msg" *ngIf="profileForm.get('password')?.hasError('required')">Password is required.</span>
+        <span class="error-msg" *ngIf="profileForm.get('password')?.hasError('pattern')">Must include Upper, Lower, Number & Symbol.</span>
+      </div>
     </div>
-  </div>
 
+    <div class="form-field">
+      <label>Gender *</label>
+      <div class="gender-options">
+        <label class="radio-chip">
+          <input type="radio" formControlName="gender" [value]="1" />
+          <span>Male</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" formControlName="gender" [value]="2" />
+          <span>Female</span>
+        </label>
+        <label class="radio-chip">
+          <input type="radio" formControlName="gender" [value]="3" />
+          <span>Other</span>
+        </label>
+      </div>
+    </div>
 
-  <!-- GENDER -->
-  <div class="form-field">
-    <label>Gender</label>
-    <div class="gender-options">
-      <label class="radio-chip">
-        <input type="radio" formControlName="gender" [value]="1" />
-        <span>Male</span>
+    <div class="form-field" [class.error]="isInvalid('dob')">
+      <label>Date of Birth *</label>
+      <div class="input-wrapper">
+        <input type="date" formControlName="dob" />
+      </div>
+      <div class="field-status" *ngIf="isInvalid('dob')">
+        <span class="error-msg">Date of birth is required.</span>
+      </div>
+    </div>
+
+    <div class="section-divider optional"><span>Additional Info (Optional)</span></div>
+
+    <div class="form-field">
+      <label>Bio</label>
+      <div class="input-wrapper">
+        <textarea formControlName="description" rows="3" placeholder="Tell us about yourself..."></textarea>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Address</label>
+      <div class="input-wrapper">
+        <input type="text" formControlName="address" placeholder="e.g. 123 Street, New York" />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Website / Link</label>
+      <div class="input-wrapper">
+        <input type="text" formControlName="link" placeholder="https://yourwebsite.com" />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Referral Code</label>
+      <div class="input-wrapper">
+        <input type="text" formControlName="referralCode" placeholder="Enter code" />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Tags (comma separated)</label>
+      <div class="input-wrapper">
+        <input type="text" formControlName="tags" placeholder="e.g. tech, travel, food" />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Language Preference</label>
+      <div class="input-wrapper">
+        <select formControlName="languagePreference">
+          <option [value]="1">English</option>
+          <option [value]="2">Hindi</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="checkbox-group">
+      <label class="custom-checkbox">
+        <input type="checkbox" formControlName="privateAccount" />
+        Private Account
       </label>
-      <label class="radio-chip">
-        <input type="radio" formControlName="gender" [value]="2" />
-        <span>Female</span>
-      </label>
-      <label class="radio-chip">
-        <input type="radio" formControlName="gender" [value]="3" />
-        <span>Other</span>
+      <label class="custom-checkbox">
+        <input type="checkbox" formControlName="latestUpdates" />
+        Updates & News
       </label>
     </div>
+
+    
+
   </div>
 
 
-  <!-- SUBMIT -->
-  <button class="submit-btn"
-          type="button"
-          (click)="onSubmit.emit()"
-          [disabled]="isLoading || profileForm.invalid">
 
-    <span *ngIf="!isLoading">Finish Registration</span>
+  <button class="submit-btn" type="button" (click)="onSubmit.emit()" [disabled]="isLoading || profileForm.invalid">
+    <span *ngIf="!isLoading">Complete Setup</span>
     <div class="spinner" *ngIf="isLoading"></div>
-
   </button>
 </div>
