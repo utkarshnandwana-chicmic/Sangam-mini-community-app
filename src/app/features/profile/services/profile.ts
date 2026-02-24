@@ -1,14 +1,16 @@
-import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, finalize, switchMap, tap } from 'rxjs';
+import { inject, Injectable, signal } from '@angular/core';
+import { finalize, switchMap, tap } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
 
 import { ApiResponse } from '../models/api-response.model';
-import { Post } from '../models/post.model';
+import { Post, CreatePostRequest } from '../models/post.model';
 import { ProfileUser } from '../models/profile.model';
 import { UpdateProfileRequest } from '../../../core/model/update-profile.model';
+
 import { cleanObject } from '../../../core/utils/object.util';
+import { PostService } from './post';
 
 interface PaginatedPosts {
   items: Post[];
@@ -21,98 +23,95 @@ interface PaginatedPosts {
 export class ProfileService {
 
   private api = inject(ApiService);
+  private postService = inject(PostService);
 
   // =========================
-  // STATE
+  // STATE (Signals)
   // =========================
 
-  private profileSubject = new BehaviorSubject<ProfileUser | null>(null);
-  private postsSubject = new BehaviorSubject<Post[]>([]);
-  private loadingSubject = new BehaviorSubject<boolean>(false);
-  private errorSubject = new BehaviorSubject<string | null>(null);
-  private isNextSubject = new BehaviorSubject<boolean>(false);
+  private _profile = signal<ProfileUser | null>(null);
+  private _posts = signal<Post[]>([]);
+  private _loading = signal<boolean>(false);
+  private _error = signal<string | null>(null);
+  private _isNext = signal<boolean>(false);
 
-  private followerCountSubject = new BehaviorSubject<number>(0);
-  private followingCountSubject = new BehaviorSubject<number>(0);
-  private postsCountSubject = new BehaviorSubject<number>(0);
+  private _followerCount = signal<number>(0);
+  private _followingCount = signal<number>(0);
+  private _postsCount = signal<number>(0);
 
   private viewedPosts = new Set<string>();
 
   // =========================
-  // PUBLIC STREAMS
+  // PUBLIC READONLY SIGNALS
   // =========================
 
-  readonly profile$ = this.profileSubject.asObservable();
-  readonly posts$ = this.postsSubject.asObservable();
-  readonly loading$ = this.loadingSubject.asObservable();
-  readonly error$ = this.errorSubject.asObservable();
-  readonly isNext$ = this.isNextSubject.asObservable();
+  readonly profile = this._profile.asReadonly();
+  readonly posts = this._posts.asReadonly();
+  readonly loading = this._loading.asReadonly();
+  readonly error = this._error.asReadonly();
+  readonly isNext = this._isNext.asReadonly();
 
-  readonly followerCount$ = this.followerCountSubject.asObservable();
-  readonly followingCount$ = this.followingCountSubject.asObservable();
-  readonly postsCount$ = this.postsCountSubject.asObservable();
+  readonly followerCount = this._followerCount.asReadonly();
+  readonly followingCount = this._followingCount.asReadonly();
+  readonly postsCount = this._postsCount.asReadonly();
 
   // =========================
   // LOAD PROFILE + POSTS
   // =========================
 
-loadProfile(): void {
+  loadProfile(): void {
 
-  this.loadingSubject.next(true);
-  this.errorSubject.next(null);
+    this._loading.set(true);
+    this._error.set(null);
 
-  this.api
-    .get<ApiResponse<ProfileUser>>(API_ENDPOINTS.USER.DETAILS)
-    .pipe(
-      switchMap((res) => {
+    this.api
+      .get<ApiResponse<ProfileUser>>(API_ENDPOINTS.USER.DETAILS)
+      .pipe(
+        switchMap((res) => {
 
-        const profile = res.data;
-        this.profileSubject.next(profile);
+          const profile = res.data;
+          this._profile.set(profile);
 
-        this.loadCounts(profile._id);
+          this.loadCounts(profile._id);
 
-        return this.loadUserPosts(profile._id);
-      }),
-      finalize(() => this.loadingSubject.next(false))
-    )
-    .subscribe({
-      error: () => {
-        this.errorSubject.next('Failed to load profile.');
-      }
-    });
-}
-
+          return this.loadUserPosts(profile._id);
+        }),
+        finalize(() => this._loading.set(false))
+      )
+      .subscribe({
+        error: () => {
+          this._error.set('Failed to load profile.');
+        }
+      });
+  }
 
   // =========================
   // LOAD USER POSTS
   // =========================
 
-private loadUserPosts(userId: string) {
+  private loadUserPosts(userId: string) {
 
-  const params = {
-    userId,
-    limit: 12,
-    skip: 0,
-    sortKey: 'createdAt',
-    sortOrder: -1,
-    postType: 1
-  };
+    const params = {
+      userId,
+      limit: 12,
+      skip: 0,
+      sortKey: 'createdAt',
+      sortOrder: -1,
+      postType: 1
+    };
 
-  return this.api
-    .get<ApiResponse<PaginatedPosts>>(
-      API_ENDPOINTS.POST.GET_ALL,
-      params
-    )
-    .pipe(
-      tap((res) => {
-        console.log('POSTS LOADED:', res.data.items);
-
-        this.postsSubject.next(res.data.items);
-        this.isNextSubject.next(res.data.isNext);
-      })
-    );
-}
-
+    return this.api
+      .get<ApiResponse<PaginatedPosts>>(
+        API_ENDPOINTS.POST.GET_ALL,
+        params
+      )
+      .pipe(
+        tap((res) => {
+          this._posts.set(res.data.items);
+          this._isNext.set(res.data.isNext);
+        })
+      );
+  }
 
   // =========================
   // LOAD COUNTS
@@ -130,58 +129,122 @@ private loadUserPosts(userId: string) {
 
           const user = res.data.items[0];
 
-          this.followerCountSubject.next(user?.followerCount ?? 0);
-          this.followingCountSubject.next(user?.followingCount ?? 0);
-          this.postsCountSubject.next(user?.postsCount ?? 0);
+          this._followerCount.set(user?.followerCount ?? 0);
+          this._followingCount.set(user?.followingCount ?? 0);
+          this._postsCount.set(user?.postsCount ?? 0);
         }
       });
   }
 
-// =========================
-// UPDATE PROFILE
-// =========================
+  // =========================
+  // UPDATE PROFILE
+  // =========================
 
-updateProfile(payload: UpdateProfileRequest) {
+  updateProfile(payload: UpdateProfileRequest) {
 
-  this.loadingSubject.next(true);
-  this.errorSubject.next(null);
+    this._loading.set(true);
+    this._error.set(null);
 
-  const cleanedPayload = cleanObject(payload);
+    const cleanedPayload = cleanObject(payload);
 
-  return this.api
-    .put<ApiResponse<ProfileUser>>(
-      API_ENDPOINTS.USER.UPDATE, 
-      cleanedPayload
-    )
-    .pipe(
-      tap((res) => {
+    return this.api
+      .put<ApiResponse<ProfileUser>>(
+        API_ENDPOINTS.USER.UPDATE,
+        cleanedPayload
+      )
+      .pipe(
+        tap((res) => {
 
-        const updatedUser = res.data;
-        const current = this.profileSubject.value;
+          const updatedUser = res.data;
+          const current = this._profile();
 
-        if (current) {
-          this.profileSubject.next({
-            ...current,
-            ...updatedUser
-          });
-        }
-
-      }),
-      finalize(() => this.loadingSubject.next(false))
-    );
-}
-
-
+          if (current) {
+            this._profile.set({
+              ...current,
+              ...updatedUser
+            });
+          }
+        }),
+        finalize(() => this._loading.set(false))
+      );
+  }
 
   // =========================
-  // LIKE TOGGLE
+  // ADD POST (Optimistic Insert)
+  // =========================
+
+  addPostOptimistically(post: Post): void {
+
+    this._posts.update(current => [
+      post,
+      ...current
+    ]);
+
+    this._postsCount.update(count => count + 1);
+  }
+
+  // =========================
+  // UPDATE POST
+  // =========================
+
+  updatePost(postId: string, payload: Partial<CreatePostRequest>) {
+
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.postService.updatePost(postId, payload).pipe(
+      tap((res) => {
+
+        const updatedPost = res.data;
+
+        this._posts.update(posts =>
+          posts.map(p =>
+            p._id === postId
+              ? { ...p, ...updatedPost }
+              : p
+          )
+        );
+      }),
+      finalize(() => this._loading.set(false))
+    );
+  }
+
+  // =========================
+// DELETE POST (Optimistic)
+// =========================
+
+deletePost(postId: string): void {
+
+  const previousPosts = this._posts();
+  const previousCount = this._postsCount();
+
+  // Optimistically remove from UI
+  this._posts.update(posts =>
+    posts.filter(p => p._id !== postId)
+  );
+
+  this._postsCount.update(count =>
+    Math.max(count - 1, 0)
+  );
+
+  this.postService.deletePost(postId).subscribe({
+    error: () => {
+      // Rollback if API fails
+      this._posts.set(previousPosts);
+      this._postsCount.set(previousCount);
+    }
+  });
+}
+
+  // =========================
+  // LIKE TOGGLE (Optimistic)
   // =========================
 
   toggleLike(post: Post): void {
 
-    // 1️⃣ Optimistic update
-    const updatedPosts = this.postsSubject.value.map(p => {
+    const previousPosts = this._posts();
 
+    const updatedPosts = previousPosts.map(p => {
       if (p._id !== post._id) return p;
 
       const newLiked = !p.isLiked;
@@ -190,37 +253,59 @@ updateProfile(payload: UpdateProfileRequest) {
         ...p,
         isLiked: newLiked,
         likesCount: newLiked
-          ? p.likesCount + 1
-          : p.likesCount - 1
+          ? (p.likesCount ?? 0) + 1
+          : Math.max((p.likesCount ?? 1) - 1, 0)
       };
     });
 
-    this.postsSubject.next(updatedPosts);
+    this._posts.set(updatedPosts);
 
-    // 2️⃣ Backend call
-    this.api
-      .post<{ data: { liked: boolean } }>(
-        `${API_ENDPOINTS.POST.LIKE_TOGGLE}/${post._id}`,
-        {}
-      )
-      .subscribe({
-        next: (res) => {
+    this.postService.toggleLike(post._id).subscribe({
+      next: (res) => {
 
-          const backendLiked = res.data.liked;
+        const backendLiked = res.data.liked;
 
-          const syncedPosts = this.postsSubject.value.map(p =>
+        this._posts.update(posts =>
+          posts.map(p =>
             p._id === post._id
               ? { ...p, isLiked: backendLiked }
               : p
-          );
+          )
+        );
+      },
+      error: () => {
+        this._posts.set(previousPosts);
+      }
+    });
+  }
 
-          this.postsSubject.next(syncedPosts);
-        },
-        error: () => {
-          // rollback
-          this.loadProfile();
-        }
-      });
+  // =========================
+  // COMMENT COUNT SYNC
+  // =========================
+
+  incrementCommentCount(postId: string): void {
+
+    this._posts.update(posts =>
+      posts.map(p =>
+        p._id === postId
+          ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
+          : p
+      )
+    );
+  }
+
+  decrementCommentCount(postId: string): void {
+
+    this._posts.update(posts =>
+      posts.map(p =>
+        p._id === postId
+          ? {
+              ...p,
+              commentsCount: Math.max((p.commentsCount || 1) - 1, 0)
+            }
+          : p
+      )
+    );
   }
 
   // =========================
@@ -233,18 +318,23 @@ updateProfile(payload: UpdateProfileRequest) {
 
     this.viewedPosts.add(postId);
 
-    this.api
-      .post(`${API_ENDPOINTS.POST.VIEW}/${postId}`, {})
-      .subscribe(() => {
+    this.postService.markView(postId).subscribe(() => {
 
-        const updatedPosts = this.postsSubject.value.map(p =>
+      this._posts.update(posts =>
+        posts.map(p =>
           p._id === postId
             ? { ...p, viewCount: p.viewCount + 1 }
             : p
-        );
-
-        this.postsSubject.next(updatedPosts);
-      });
+        )
+      );
+    });
   }
 
+  // =========================
+  // GET CURRENT PROFILE
+  // =========================
+
+  get currentProfile(): ProfileUser | null {
+    return this._profile();
+  }
 }

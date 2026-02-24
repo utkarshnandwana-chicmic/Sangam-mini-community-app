@@ -46,7 +46,33 @@ export interface Post {
 export interface PostResponse {
   data: {
     items: Post[];
-    isNext: boolean;
+    isNext: boolean; 
   };
 }
+
+export interface CreatePostRequest {
+  caption?: string;
+  hashtags?: string[];
+  taggedUserIds?: string[];
+  visibility: number;
+  postType?: number;
+  hideComments?: boolean;
+  hideLikes?: boolean;
+  hideShares?: boolean;
+  address?: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  repostId?: string;
+  media?: {
+    url: string;
+    mediaType: number;
+    thumbnailUrl?: string;
+  }[];
+  audio?: string;
+  audioName?: string;
+  scanId?: string;
+}
+
 

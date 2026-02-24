@@ -1,0 +1,168 @@
+<div class="modal-backdrop" (click)="close.emit()"></div>
+
+<div class="modal-container" (click)="$event.stopPropagation()">
+  <div class="modal-header">
+    <h3>{{ editMode ? 'Edit Post' : 'Create New Post' }}</h3>
+    <button class="close-icon-btn" (click)="close.emit()">✕</button>
+  </div>
+
+  <form [formGroup]="form" class="modal-body">
+    <div class="form-scroll-container">
+
+      <!-- =========================
+           MEDIA SECTION
+      ========================= -->
+
+      <div class="upload-zone" [class.has-media]="previewUrls().length > 0">
+
+        <label for="file-upload" class="upload-label" *ngIf="previewUrls().length === 0">
+          <div class="upload-icon">📸</div>
+          <span>
+            {{ editMode ? 'Add more photos or videos' : 'Click to upload photos or videos' }}
+          </span>
+        </label>
+
+        <input id="file-upload" type="file" multiple (change)="onFileSelected($event)" hidden />
+
+        <div class="media-grid" *ngIf="previewUrls().length > 0">
+
+          <div class="media-item" *ngFor="let img of previewUrls(); let i = index">
+            <img [src]="img" />
+            <button type="button" class="remove-btn" (click)="removeImage(i)">
+              ✕
+            </button>
+          </div>
+
+          <label for="file-upload" class="add-more-card">
+            <span>+ Add</span>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- =========================
+           CONTENT SECTION
+      ========================= -->
+
+      <div class="section-divider"><span>Content</span></div>
+
+      <div class="form-field">
+        <label>Caption</label>
+        <div class="input-wrapper">
+          <textarea formControlName="caption" rows="3" placeholder="Write something catchy..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Hashtags</label>
+        <div class="input-wrapper">
+          <input type="text" formControlName="hashtags" placeholder="e.g. photography, nature, vibes" />
+        </div>
+      </div>
+
+      <!-- =========================
+           SETTINGS
+      ========================= -->
+
+      <div class="section-divider"><span>Settings</span></div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>Visibility</label>
+          <div class="input-wrapper">
+            <select formControlName="visibility">
+              <option [value]="1">Public</option>
+              <option [value]="2">Private</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Hide PostType in edit if you want (optional) -->
+        <div class="form-field flex-1" *ngIf="!editMode">
+          <label>Post Type</label>
+          <div class="input-wrapper">
+            <select formControlName="postType">
+              <option [value]="1">Normal Post</option>
+              <option [value]="2">Reel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkbox-group grid-2">
+        <label class="custom-checkbox">
+          <input type="checkbox" formControlName="hideComments" />
+          Hide Comments
+        </label>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" formControlName="hideLikes" />
+          Hide Likes
+        </label>
+
+        <label class="custom-checkbox">
+          <input type="checkbox" formControlName="hideShares" />
+          Hide Shares
+        </label>
+      </div>
+
+      <!-- =========================
+           TAGGING & LOCATION
+      ========================= -->
+
+      <div class="section-divider optional">
+        <span>Tagging & Location</span>
+      </div>
+
+      <div class="form-field">
+        <label>Tag Users</label>
+        <div class="input-wrapper">
+          <input formControlName="taggedUserIds" placeholder="User IDs separated by commas" />
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Location</label>
+        <div class="input-wrapper">
+          <input formControlName="address" placeholder="Add location" />
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =========================
+         FOOTER
+    ========================= -->
+
+    <div class="modal-footer">
+
+      <button type="button" class="btn-secondary" (click)="close.emit()">
+        Cancel
+      </button>
+
+      <button type="button" class="submit-btn" (click)="submit()" [disabled]="
+  isUploading() ||
+  isPosting() ||
+  !uploadedMedia().length ||
+  (editMode && !hasChanges())
+">
+
+        <!-- Dynamic Button Text -->
+        <span *ngIf="!isPosting() && !isUploading()">
+          {{ editMode ? 'Update Post' : 'Share Post' }}
+        </span>
+
+        <span *ngIf="isUploading()">Uploading...</span>
+
+        <span *ngIf="isPosting()">
+          {{ editMode ? 'Updating...' : 'Sharing...' }}
+        </span>
+
+        <div class="small-spinner white" *ngIf="isPosting() || isUploading()"></div>
+
+      </button>
+
+    </div>
+
+  </form>
+</div>

@@ -1,4 +1,112 @@
-.logout-item {
-  color: #e53935;
-  cursor: pointer;
+.sidebar-wrapper {
+  /* Fix the sidebar to the viewport */
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 244px;
+  
+  /* Prevent any scrolling */
+  overflow: hidden; 
+  display: flex;
+  flex-direction: column;
+  
+  padding: 12px;
+  border-right: 1px solid #dbdbdb;
+  background: #ffffff;
+  z-index: 100;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Responsive: Icon-only mode */
+  @media (max-width: 1260px) {
+    width: 72px;
+    padding: 12px 8px;
+
+    .logo-section .brand-logo { display: none; }
+    .logo-section .logo-icon-only { display: block; }
+    
+    .nav-item {
+      justify-content: center;
+      padding: 12px 0;
+      .nav-svg { margin-right: 0; }
+      .label { display: none; }
+    }
+  }
+
+  .logo-section {
+    padding: 30px 12px 35px;
+    flex-shrink: 0;
+    
+    .brand-logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #000;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon-only {
+      display: none;
+      font-weight: 800;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+  }
+
+  .nav-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden; // Absolute lock against scrolling
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin: 2px 0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #000;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+
+    .nav-svg {
+      width: 24px;
+      height: 24px;
+      stroke: #000;
+      margin-right: 16px;
+      flex-shrink: 0;
+      transition: stroke-width 0.2s ease;
+    }
+
+    .label {
+      font-size: 1rem;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      background-color: #f2f2f2;
+    }
+
+    &.active {
+      .label { font-weight: 700; }
+      .nav-svg { stroke-width: 2.5px; }
+    }
+  }
+
+  .bottom-nav {
+    flex-shrink: 0;
+    padding-top: 10px;
+    margin-top: auto; 
+    border-top: 1px solid #f2f2f2;
+  }
+
+  .logout {
+    color: #ed4956;
+    .nav-svg { stroke: #ed4956; }
+    &:hover { background-color: #fff1f0; }
+  }
 }

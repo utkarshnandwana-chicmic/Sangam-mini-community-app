@@ -4,8 +4,7 @@ import {
   Output,
   EventEmitter,
   OnChanges,
-  SimpleChanges,
-  ChangeDetectorRef
+  SimpleChanges
 } from '@angular/core';
 
 import {
@@ -25,7 +24,6 @@ import { ProfileUser } from '../models/profile.model';
 import { UpdateProfileRequest } from '../../../core/model/update-profile.model';
 import { ImageUrlPipe } from '../../../core/pipes/image-url-pipe';
 
-
 @Component({
   selector: 'app-edit-profile-form',
   standalone: true,
@@ -36,26 +34,22 @@ import { ImageUrlPipe } from '../../../core/pipes/image-url-pipe';
 export class EditProfileFormComponent implements OnChanges {
 
   @Input({ required: true }) profile!: ProfileUser;
-  @Input() loading: boolean | null = false;
+  @Input() loading: boolean = false;
+
   @Output() fileSelected = new EventEmitter<File | null>();
-
-
   @Output() save = new EventEmitter<UpdateProfileRequest>();
 
   private initialValue!: UpdateProfileRequest;
 
   form: FormGroup;
   previewUrl: string | null = null;
-selectedFile: File | null = null;
-imageChanged = false;
-
+  selectedFile: File | null = null;
+  imageChanged = false;
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private authService: AuthService
   ) {
-
     this.form = this.fb.group({
       name: ['', Validators.required],
       userName: [
@@ -73,27 +67,24 @@ imageChanged = false;
     });
   }
 
-ngOnChanges(changes: SimpleChanges): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['profile'] || !this.profile) return;
 
-  if (!changes['profile'] || !this.profile) return;
+    const value: UpdateProfileRequest = {
+      name: this.profile.name,
+      userName: this.profile.userName,
+      description: this.profile.description ?? '',
+      link: this.profile.link ?? '',
+      privateAccount: this.profile.privateAccount
+    };
 
+    this.form.patchValue(value);
+    this.initialValue = value;
+    this.form.markAsPristine();
 
-
-  const value: UpdateProfileRequest = {
-    name: this.profile.name,
-    userName: this.profile.userName,
-    description: this.profile.description ?? '',
-    link: this.profile.link ?? '',
-    privateAccount: this.profile.privateAccount
-  };
-
-  this.form.patchValue(value);
-  this.initialValue = value;
-  this.form.markAsPristine();
-
-  // Reset image change state when profile loads
-  this.imageChanged = false;
-}
+    this.previewUrl = null;
+    this.imageChanged = false;
+  }
 
   private usernameValidator(): AsyncValidatorFn {
     return (control: AbstractControl) => {
@@ -120,45 +111,44 @@ ngOnChanges(changes: SimpleChanges): void {
     };
   }
 
-onSubmit(): void {
+  onSubmit(): void {
+    if (this.form.invalid) return;
 
-  if (this.form.invalid) return;
+    const current = this.form.value;
 
-  const current = this.form.value;
+    const changed = Object.keys(current)
+      .filter(key =>
+        current[key as keyof typeof current] !==
+        this.initialValue[key as keyof typeof this.initialValue]
+      )
+      .reduce((acc, key) => {
+        acc[key as keyof UpdateProfileRequest] =
+          current[key as keyof typeof current];
+        return acc;
+      }, {} as UpdateProfileRequest);
 
-  const changed = Object.keys(current)
-    .filter(key =>
-      current[key as keyof typeof current] !==
-      this.initialValue[key as keyof typeof this.initialValue]
-    )
-    .reduce((acc, key) => {
-      acc[key as keyof UpdateProfileRequest] =
-        current[key as keyof typeof current];
-      return acc;
-    }, {} as UpdateProfileRequest);
-
-  this.save.emit(changed);
-}
-
+    this.save.emit(changed);
+  }
 
   onFileChange(event: any): void {
-  const file = event.target.files[0];
-  if (!file) return;
 
-  if (!file.type.startsWith('image/')) return;
-  if (file.size > 2 * 1024 * 1024) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  this.selectedFile = file;
-   this.imageChanged = true;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 2 * 1024 * 1024) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    this.previewUrl = reader.result as string;
-    this.cdr.detectChanges();
-  };
-  reader.readAsDataURL(file);
+    this.selectedFile = file;
+    this.imageChanged = true;
 
-  this.fileSelected.emit(file);
-}
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewUrl = reader.result as string;
+    };
+
+    reader.readAsDataURL(file);
+
+    this.fileSelected.emit(file);
+  }
 
 }

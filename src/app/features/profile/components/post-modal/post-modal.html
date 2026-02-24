@@ -1,0 +1,205 @@
+<div class="modal-backdrop" (click)="close.emit()"></div>
+
+<div class="modal-container" (click)="$event.stopPropagation()">
+
+  <div class="media-section">
+    <ng-container *ngIf="currentMedia as media">
+      <img *ngIf="!isVideo(media.mediaType)" [src]="media.completeUrl || media.url" class="media-content" />
+      <video *ngIf="isVideo(media.mediaType)" [src]="media.url" controls class="media-content"></video>
+    </ng-container>
+
+    <button *ngIf="hasMultipleMedia" class="nav-arrow prev" (click)="prev(); $event.stopPropagation()">‹</button>
+    <button *ngIf="hasMultipleMedia" class="nav-arrow next" (click)="next(); $event.stopPropagation()">›</button>
+  </div>
+
+  <div class="details-section">
+<header class="post-header">
+  <div class="user-info">
+    <img *ngIf="profile.profilePicture"
+         [src]="profile.profilePicture | imageUrl"
+         class="avatar-img" />
+    <div *ngIf="!profile.profilePicture"
+         class="avatar-fallback">
+      {{ profile.userName.charAt(0) }}
+    </div>
+    <span class="username">{{ profile.userName }}</span>
+  </div>
+
+  <div class="menu-wrapper" *ngIf="isOwner">
+
+    <button class="more-btn"
+            (click)="toggleMenu($event)">
+      <svg fill="currentColor" height="24"
+           viewBox="0 0 24 24" width="24">
+        <circle cx="12" cy="12" r="1.5"></circle>
+        <circle cx="6" cy="12" r="1.5"></circle>
+        <circle cx="18" cy="12" r="1.5"></circle>
+      </svg>
+    </button>
+
+    <div class="post-menu-dropdown"
+         *ngIf="showMenu"
+         (click)="$event.stopPropagation()">
+
+      <button class="dropdown-item"
+              (click)="onEditPost()">
+        Edit Post
+      </button>
+
+      <button class="dropdown-item danger"
+              (click)="onDeletePost()">
+        Delete Post
+      </button>
+
+    </div>
+
+  </div>
+</header>
+
+    <div class="scrollable-content">
+      <div class="comment-item caption-item" *ngIf="post.caption">
+        <div class="comment-avatar">
+          <img [src]="profile.profilePicture | imageUrl" />
+        </div>
+        <div class="comment-body">
+          <span class="username-link">{{ profile.userName }}</span>
+          <span class="content-text">{{ post.caption }}</span>
+        </div>
+      </div>
+      <div *ngIf="commentsLoading()" class="comments-loader">
+        <div class="spinner small"></div>
+      </div>
+      <ng-container *ngIf="!commentsLoading()">
+        <div class="comment-thread" *ngFor="let comment of rootComments(); trackBy: trackByCommentId">
+
+          <div class="comment-item">
+            <div class="comment-avatar">
+<ng-container *ngIf="comment.user as user; else fallback">
+  <img *ngIf="user.profilePicture; else fallback"
+       [src]="user.profilePicture" />
+</ng-container>              <ng-template #fallback>
+                <div class="avatar-fallback">{{ comment.user?.userName?.charAt(0) }}</div>
+              </ng-template>
+            </div>
+
+            <div class="comment-body">
+              <span class="username-link">{{ comment.user?.userName }}</span>
+              <span class="content-text">{{ comment.content }}</span>
+
+              <div class="comment-meta">
+                <span class="likes-count-text" *ngIf="(comment.likesCount ?? 0) > 0">
+                  {{ comment.likesCount }} {{ comment.likesCount === 1 ? 'like' : 'likes' }}
+                </span>
+                <button (click)="openReplyBox(comment._id); $event.stopPropagation()">Reply</button>
+                <button *ngIf="canEditComment(comment)" (click)="startEdit(comment)">Edit</button>
+                <button *ngIf="canDeleteComment(comment)" class="delete-icon-btn" (click)="onDelete(comment._id)">
+                  <svg fill="#ed4956" height="14" viewBox="0 0 24 24" width="14">
+                    <path
+                      d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z" />
+                    </svg>
+                </button>
+              </div>
+
+              <div *ngIf="activeReplyCommentId === comment._id" class="reply-input-box">
+                <input type="text" [(ngModel)]="replyText" placeholder="Add a reply..." />
+                <button class="post-btn" (click)="submitReply(comment._id)">Post</button>
+              </div>
+            </div>
+
+            <button class="like-heart" (click)="toggleCommentLike(comment)">
+              <svg [attr.fill]="comment.isLiked ? '#ed4956' : '#8e8e8e'" height="12" viewBox="0 0 48 48" width="12">
+                <path
+                  d="M34.6 6.1c5.7 0 10.4 5.2 10.4 11.5 0 6.8-5.9 15.1-15.5 25.3L28.4 44H19.6l-1.1-1.1C8.9 32.7 3 24.4 3 17.6c0-6.3 4.7-11.5 10.4-11.5 3.3 0 6.4 1.8 8.4 4.8 2-3 5.1-4.8 8.4-4.8z">
+                </path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="reply-list">
+            <div class="comment-item reply-item" *ngFor="let reply of getReplies(comment._id)">
+              <div class="comment-avatar mini"><img [src]="reply.user?.profilePicture" /></div>
+              <div class="comment-body">
+                <span class="username-link">{{ reply.user?.userName }}</span>
+                <span class="content-text">{{ reply.content }}</span>
+                <div class="comment-meta">
+                  <span class="likes-count-text" *ngIf="(reply.likesCount ?? 0) > 0">{{ reply.likesCount }} likes</span>
+                  <button *ngIf="canDeleteComment(reply)" class="delete-icon-btn" (click)="onDelete(reply._id)">
+                    <svg fill="#ed4956" height="12" viewBox="0 0 24 24" width="12">
+                      <path
+                        d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z" />
+                      </svg>
+                  </button>
+                </div>
+              </div>
+              <button class="like-heart" (click)="toggleCommentLike(reply)">
+                <svg [attr.fill]="reply.isLiked ? '#ed4956' : '#8e8e8e'" height="11" viewBox="0 0 48 48" width="11">
+                  <path
+                    d="M34.6 6.1c5.7 0 10.4 5.2 10.4 11.5 0 6.8-5.9 15.1-15.5 25.3L28.4 44H19.6l-1.1-1.1C8.9 32.7 3 24.4 3 17.6c0-6.3 4.7-11.5 10.4-11.5 3.3 0 6.4 1.8 8.4 4.8 2-3 5.1-4.8 8.4-4.8z">
+                  </path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <footer class="post-footer">
+<div class="action-bar">
+
+  <!-- LIKE -->
+  <button class="icon-btn" (click)="onToggleLike()">
+
+    <svg *ngIf="!post.isLiked"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         height="24"
+         viewBox="0 0 24 24"
+         width="24">
+      <path
+        d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.194 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.325.487.568 1.011.746 1.558.041.14.051.23.051.23s.01-.09.051-.23c.178-.547.421-1.071.746-1.558a4.21 4.21 0 013.675-1.941z">
+      </path>
+    </svg>
+
+    <svg *ngIf="post.isLiked"
+         fill="#ed4956"
+         height="24"
+         viewBox="0 0 48 48"
+         width="24">
+      <path
+        d="M34.6 6.1c5.7 0 10.4 5.2 10.4 11.5 0 6.8-5.9 15.1-15.5 25.3L28.4 44H19.6l-1.1-1.1C8.9 32.7 3 24.4 3 17.6c0-6.3 4.7-11.5 10.4-11.5 3.3 0 6.4 1.8 8.4 4.8 2-3 5.1-4.8 8.4-4.8z">
+      </path>
+    </svg>
+
+  </button>
+
+  <!-- SAVE (UNDERLINED ONLY) -->
+  <button class="icon-btn" (click)="onToggleSave()">
+
+    <svg
+      fill="none"
+      [attr.stroke]="post.isSaved ? '#000' : '#8e8e8e'"
+      stroke-width="2"
+      height="24"
+      viewBox="0 0 24 24"
+      width="24">
+
+      <polygon points="20 21 12 13.44 4 21 4 3 20 3 20 21"></polygon>
+
+    </svg>
+
+  </button>
+
+</div>
+      <div class="footer-stats">
+        <strong>{{ post.likesCount | number }} likes</strong>
+        <div class="post-date">{{ post.createdAt | date:'MMMM d' }}</div>
+      </div>
+      <div class="comment-input-section">
+        <input type="text" [(ngModel)]="newComment" placeholder="Add a comment..." />
+        <button class="post-btn" (click)="submitComment()" [disabled]="!newComment.trim()">Post</button>
+      </div>
+    </footer>
+  </div>
+</div>

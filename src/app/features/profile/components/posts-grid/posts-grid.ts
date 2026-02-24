@@ -1,4 +1,11 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy
+} from '@angular/core';
+
 import { Post } from '../../models/post.model';
 import { CommonModule } from '@angular/common';
 
@@ -7,26 +14,31 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './posts-grid.html',
-  styleUrl: './posts-grid.scss'
+  styleUrl: './posts-grid.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfilePostsGridComponent {
-  @Input() posts: Post[] = [];
-  @Input() profile: any; 
-  
-  @Output() toggleLike = new EventEmitter<Post>();
-  @Output() viewPost = new EventEmitter<string>();
 
-  trackById(index: number, post: Post) {
+  @Input({ required: true }) posts: Post[] = [];
+
+  @Output() toggleLike = new EventEmitter<Post>();
+  @Output() viewPost = new EventEmitter<Post>();
+
+  trackById(_: number, post: Post) {
     return post._id;
   }
 
-  onToggleLike(post: Post) {
-    post.isLiked = !post.isLiked;
-    post.isLiked ? post.likesCount++ : post.likesCount--;
+  onToggleLike(post: Post, event: Event) {
+    event.stopPropagation(); // prevent modal open
     this.toggleLike.emit(post);
   }
 
   onView(post: Post) {
-    this.viewPost.emit(post._id);
+    this.viewPost.emit(post);
   }
+
+  getFirstMedia(post: Post) {
+    return post.media?.[0] ?? null;
+  }
+
 }

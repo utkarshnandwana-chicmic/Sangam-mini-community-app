@@ -1,11 +1,52 @@
 .layout-container {
-  height: 100vh;
+  display: flex;
+  min-height: 100vh;
+  background-color: #ffffff !important;
 }
 
+/* Sidebar Host Container */
 .sidebar {
-  width: 240px;
+  width: 244px;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+
+  @media (max-width: 1260px) {
+    width: 72px;
+  }
 }
 
+/* Scrollable Content Area */
 .content {
-  padding: 20px;
+  flex-grow: 1;
+  height: 100vh;
+  overflow-y: auto; // Content scrolls here
+  overflow-x: hidden;
+  padding: 0;
+  display: flex;
+  justify-content: center; // Centers the feed
+}
+
+/* Instagram-style Feed Container */
+.router-container {
+  width: 100%;
+  max-width: 935px; // Matches Instagram profile/feed width
+  padding: 30px 20px;
+  margin: 0 auto;
+}
+
+/* Global Scrollbar Style for the Content Area */
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #dbdbdb;
+  border-radius: 10px;
+  &:hover {
+    background: #c7c7c7;
+  }
 }

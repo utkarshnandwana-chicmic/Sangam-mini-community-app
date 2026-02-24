@@ -17,13 +17,16 @@
     grid-template-columns: 1fr;
     padding: 20px 16px;
     gap: 24px;
+    text-align: center;
   }
 }
 
-/* --- Avatar Styling --- */
+/* --- Left Column Styling --- */
 .avatar-col {
   display: flex;
-  justify-content: center;
+  flex-direction: column; // Stacks items vertically
+  align-items: center;
+  gap: 16px;
 
   .avatar-ring {
     position: relative;
@@ -32,9 +35,6 @@
     border-radius: 50%;
     padding: 4px;
     background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
     &.premium-ring {
       background: var(--premium-gradient);
@@ -57,25 +57,57 @@
       justify-content: center;
       span { font-size: 64px; font-weight: 800; color: #262626; }
     }
+  }
 
-    @media (max-width: 768px) {
-      width: 88px;
-      height: 88px;
-      .avatar-placeholder span { font-size: 32px; }
+  /* Action Buttons Styling */
+  .avatar-actions {
+    width: 100%;
+    max-width: 200px;
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
     }
+
+    .btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s ease;
+      white-space: nowrap;
+
+      &-full { width: 100%; }
+      &-primary { background: var(--ig-primary); color: white; }
+      &-secondary { background: #efefef; color: #262626; }
+      
+      &:hover { filter: brightness(0.95); }
+    }
+  }
+
+  /* Wallet Alignment under Avatar */
+  .wallet-pill.left-align {
+    margin-top: 4px;
+    width: auto;
+    min-width: 160px;
+    justify-content: center;
   }
 }
 
-/* --- Info Column --- */
+/* --- Right Column Styling --- */
 .info-col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 
   .top-row {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 12px;
+    margin-bottom: 8px;
     
     .username {
       font-size: 28px;
@@ -86,41 +118,16 @@
       gap: 10px;
       .verify-badge { width: 24px; height: 24px; }
     }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-
-      .btn {
-        padding: 8px 20px;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        transition: 0.2s ease;
-
-        &-primary { background: var(--ig-primary); color: white; &:hover { background: #1877f2; } }
-        &-secondary { background: #efefef; color: #262626; &:hover { background: #dbdbdb; } }
-      }
-
-      .btn-icon {
-        background: none; border: none; cursor: pointer; padding: 4px; color: #262626;
-        svg { width: 24px; height: 24px; }
-        &:hover { opacity: 0.6; }
-      }
-    }
   }
 }
 
-/* --- Bio Block --- */
 .bio-block {
   .name-badge-row {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 8px;
+    @media (max-width: 768px) { justify-content: center; }
 
     .real-name { font-size: 16px; font-weight: 700; margin: 0; color: #262626; }
     .plan-badge {
@@ -130,7 +137,7 @@
     }
   }
 
-  .bio-text { font-size: 14px; color: #262626; line-height: 1.5; margin-bottom: 12px; max-width: 450px; }
+  .bio-text { font-size: 14px; color: #262626; line-height: 1.5; margin-bottom: 12px; }
 
   .links-meta {
     display: flex;
@@ -138,10 +145,9 @@
     gap: 16px;
     margin-bottom: 12px;
     font-size: 14px;
+    @media (max-width: 768px) { justify-content: center; }
 
-    .link-item { color: #00376b; text-decoration: none; font-weight: 600; &:hover { text-decoration: underline; } }
-    .meta-item { color: #262626; }
-    .icon { margin-right: 4px; }
+    .link-item { color: #00376b; text-decoration: none; font-weight: 600; }
   }
 
   .footer-meta {
@@ -149,27 +155,28 @@
     gap: 16px;
     font-size: 12px;
     color: var(--ig-gray);
+    @media (max-width: 768px) { justify-content: center; }
   }
+}
 
-  /* --- Premium Wallet Pill --- */
-  .wallet-pill {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 20px;
-    padding: 8px 16px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-    gap: 12px;
+/* Wallet Pill Base Styles */
+.wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  gap: 12px;
 
-    .wallet-icon { font-size: 20px; }
-    .wallet-details {
-      display: flex;
-      flex-direction: column;
-      .label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
-      .value { font-size: 15px; font-weight: 700; color: var(--ig-success); }
-    }
+  .wallet-icon { font-size: 20px; }
+  .wallet-details {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    .label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #94a3b8; }
+    .value { font-size: 14px; font-weight: 700; color: var(--ig-success); }
   }
 }
 
@@ -178,5 +185,3 @@
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-
-@keyframes scaleIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }

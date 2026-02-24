@@ -1,50 +1,56 @@
-/* profile-page.scss */
 :host {
   display: block;
-  --bg-body: #fafafa; // Instagram-like off-white
+  --bg-body: white; 
   --text-primary: #262626;
   --text-secondary: #8e8e8e;
-  --accent: #0095f6;
-  --border: #dbdbdb;
+  --border-light: #efefef;
+  --border-medium: #dbdbdb;
+  --sidebar-width: 245px; /* Define this to maintain consistency */
+  --sidebar-collapsed-width: 73px;
 }
 
 .layout-container {
   min-height: 100vh;
   background-color: var(--bg-body);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: var(--text-primary);
-}
+  /* CHANGE: Push the whole layout to the right so it doesn't go under the sidebar */
+  padding-left: var(--sidebar-width); 
+  transition: padding-left 0.3s ease;
 
-.profile-content {
-  max-width: 975px; /* Standard social media container width */
-  margin: 0 auto;
-  padding: 0 20px 4rem;
-  
+  @media (max-width: 1260px) {
+    padding-left: var(--sidebar-collapsed-width);
+  }
+
   @media (max-width: 768px) {
-    padding: 0 0 4rem; /* Full width on mobile */
+    padding-left: 0; /* Sidebar usually becomes a bottom nav on small mobile */
   }
 }
 
+.profile-content {
+  max-width: 935px; 
+  margin: 0 auto;
+  padding: 30px 20px 0;
+  /* Now 'margin: 0 auto' centers the profile perfectly within the viewable area */
+}
+
 .content-body {
-  margin-top: 2rem;
+  margin-top: 44px;
 }
 
 .grid-section {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-medium);
   margin-top: 2rem;
   
   .tabs {
     display: flex;
     justify-content: center;
     gap: 60px;
-    margin-bottom: 1rem;
     
     .tab {
       background: none;
       border: none;
       border-top: 1px solid transparent;
-      margin-top: -1px; /* Overlap border */
-      padding: 12px 0;
+      margin-top: -1px; /* Overlap the grid-section border */
+      padding: 15px 0;
       color: var(--text-secondary);
       font-size: 12px;
       font-weight: 600;
@@ -53,44 +59,45 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      text-transform: uppercase;
 
       &.active {
-        border-top-color: var(--text-primary);
+        border-top: 1px solid var(--text-primary);
         color: var(--text-primary);
       }
       
-      .icon { font-size: 14px; font-family: 'Material Icons', sans-serif; }
+      svg {
+        display: block;
+      }
     }
   }
 }
 
-/* Loading & Error States */
+/* LOADING & ERROR STATES */
 .state-layer {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 4rem;
+  padding: 5rem;
   
   &.loading .spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgba(0,0,0,0.1);
+    border: 2px solid #dbdbdb;
     border-radius: 50%;
-    border-top-color: var(--text-secondary);
+    border-top-color: #a8a8a8;
     animation: spin 0.8s linear infinite;
   }
   
   &.error .error-toast {
     background: #fff;
-    border: 1px solid #ffcccb;
-    color: #d8000c;
+    border: 1px solid var(--border-medium);
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: 4px;
     display: flex;
-    gap: 12px;
-    align-items: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    gap: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
   }
 }
 

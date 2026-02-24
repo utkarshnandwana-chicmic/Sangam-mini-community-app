@@ -3,9 +3,8 @@ import {
   Component,
   Input
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ProfileUser } from '../../models/profile.model';
 
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-profile-stats',
@@ -17,9 +16,8 @@ import { ProfileUser } from '../../models/profile.model';
 })
 export class ProfileStatsComponent {
 
-@Input({ required: true }) postsCount!: number;
-@Input({ required: true }) followerCount!: number;
-@Input({ required: true }) followingCount!: number;
-  profile!: ProfileUser;
+  @Input({ required: true }) postsCount: number = 0;
+  @Input({ required: true }) followerCount: number = 0;
+  @Input({ required: true }) followingCount: number = 0;
 
 }

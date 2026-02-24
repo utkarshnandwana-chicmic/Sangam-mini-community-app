@@ -3,8 +3,7 @@ import {
   Component,
   Input,
   inject,
-  OnChanges,
-  SimpleChanges
+  computed
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -22,33 +21,20 @@ import { ImageUrlPipe } from '../../../../core/pipes/image-url-pipe';
   styleUrl: './profile-haeder.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProfileHeaderComponent implements OnChanges {
+export class ProfileHeaderComponent {
 
   private authService = inject(AuthService);
   private router = inject(Router);
 
   @Input({ required: true }) profile!: ProfileUser;
 
-  isOwnProfile = false;
-
-  // =========================
-  // Detect changes properly (OnPush safe)
-  // =========================
-
-  ngOnChanges(changes: SimpleChanges): void {
-
-    if (!changes['profile'] || !this.profile) return;
-
+  readonly isOwnProfile = computed(() => {
     const currentUserId = this.authService.getUserId();
-
-    this.isOwnProfile = currentUserId === this.profile._id;
-  }
-
-  // =========================
-  // Navigate to Edit Page
-  // =========================
+    return !!this.profile && currentUserId === this.profile._id;
+  });
 
   onEditProfile(): void {
     this.router.navigate(['/profile/edit']);
   }
+
 }

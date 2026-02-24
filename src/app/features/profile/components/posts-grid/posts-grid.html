@@ -1,56 +1,30 @@
-<div class="desktop-grid-container">
-  <article class="own-post-card" *ngFor="let post of posts; trackBy: trackById">
-    
-    <header class="post-header">
-      <div class="user-info">
-        <div class="avatar-initials">{{ profile?.name?.charAt(0) || 'U' }}</div>
-        <div class="text-meta">
-          <span class="username-text">{{ profile?.userName }}</span>
-        </div>
-      </div>
-      <button class="options-btn">
-        <svg fill="#262626" height="24" viewBox="0 0 24 24" width="24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="6" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
-      </button>
-    </header>
+<div class="profile-grid">
 
-    <div class="image-wrapper" (dblclick)="onToggleLike(post)">
-      <img [src]="post.media[0]?.completeUrl" alt="Post Content" class="desktop-img" />
-      
-      <div class="multi-indicator" *ngIf="post.media.length > 1">
-        <svg fill="white" height="16" viewBox="0 0 48 48" width="16"><path d="M34.8 29.7V11c0-2.9-2.3-5.2-5.2-5.2H11c-2.9 0-5.2 2.3-5.2 5.2v18.7c0 2.9 2.3 5.2 5.2 5.2h18.7c2.8 0 5.1-2.3 5.1-5.2zM12.4 41.3c-1.1 0-2.1-.4-2.8-1.1-.7-.7-1.1-1.7-1.1-2.8V12.4c0-1.1.4-2.1 1.1-2.8.7-.7 1.7-1.1 2.8-1.1h18.7c1.1 0 2.1.4 2.8 1.1.7.7 1.1 1.7 1.1 2.8v24.9c0 1.1-.4 2.1-1.1 2.8-.7.7-1.7 1.1-2.8 1.1H12.4z"></path></svg>
+  <div
+    class="grid-item"
+    *ngFor="let post of posts; trackBy: trackById"
+    (click)="onView(post)">
+
+    <!-- Overlay -->
+    <div class="grid-overlay">
+      <div class="overlay-stats">
+        <span>❤️ {{ post.likesCount}}</span>
+        <span>💬 {{ post.commentsCount  }}</span>
       </div>
     </div>
 
-    <div class="interaction-bar">
-      <div class="group-left">
-        <button class="icon-btn" (click)="onToggleLike(post)">
-          <svg *ngIf="!post.isLiked" fill="none" stroke="#262626" stroke-width="2" height="24" viewBox="0 0 24 24" width="24"><path d="M16.792 3.904A4.989 4.989 0 0121.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.194 2.5 9.122a4.989 4.989 0 014.708-5.218 4.21 4.21 0 013.675 1.941c.325.487.568 1.011.746 1.558.041.14.051.23.051.23s.01-.09.051-.23c.178-.547.421-1.071.746-1.558a4.21 4.21 0 013.675-1.941z"></path></svg>
-          <svg *ngIf="post.isLiked" fill="#ed4956" height="24" viewBox="0 0 48 48" width="24"><path d="M34.6 6.1c5.7 0 10.4 5.2 10.4 11.5 0 6.8-5.9 15.1-15.5 25.3L28.4 44H19.6l-1.1-1.1C8.9 32.7 3 24.4 3 17.6c0-6.3 4.7-11.5 10.4-11.5 3.3 0 6.4 1.8 8.4 4.8 2-3 5.1-4.8 8.4-4.8z"></path></svg>
-        </button>
-        <button class="icon-btn" (click)="onView(post)">
-          <svg fill="none" stroke="#262626" stroke-width="2" height="24" viewBox="0 0 24 24" width="24"><path d="M20.656 17.008a9.993 9.993 0 10-3.59 3.615L22 22z"></path></svg>
-        </button>
-        <button class="icon-btn">
-          <svg fill="none" stroke="#262626" stroke-width="2" height="24" viewBox="0 0 24 24" width="24"><line x1="22" x2="9.218" y1="3" y2="10.083"></line><polygon points="11.698 20.334 22 3.001 2 8.834 11.698 20.334"></polygon></svg>
-        </button>
-      </div>
-      <button class="icon-btn">
-        <svg fill="none" stroke="#262626" stroke-width="2" height="24" viewBox="0 0 24 24" width="24"><polygon points="20 21 12 13.44 4 21 4 3 20 3 20 21"></polygon></svg>
-      </button>
-    </div>
+    <!-- Media -->
+    <ng-container *ngIf="getFirstMedia(post) as firstMedia">
+      <img
+        [src]="
+          firstMedia.thumbnailUrl ||
+          firstMedia.completeUrl ||
+          firstMedia.url
+        "
+        class="grid-img"
+        alt="Post media" />
+    </ng-container>
 
-    <footer class="post-footer">
-      <div class="metrics" *ngIf="!post.hideLikes">
-        <strong>{{ post.likesCount | number }} likes</strong>
-      </div>
-      <div class="caption-block" *ngIf="post.caption">
-        <span class="user-link">{{ profile?.userName }}</span> {{ post.caption }}
-      </div>
-      <button class="comment-link" *ngIf="!post.hideComments && post.commentsCount > 0" (click)="onView(post)">
-        View all {{ post.commentsCount }} comments
-      </button>
-      <div class="timestamp">{{ post.createdAt | date:'longDate' }}</div>
-    </footer>
+  </div>
 
-  </article>
 </div>
