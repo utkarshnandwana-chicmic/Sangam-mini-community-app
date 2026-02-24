@@ -1,16 +1,20 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   OnDestroy,
   inject,
   signal,
-  computed
+  computed,
+  effect,
+  DestroyRef
 } from '@angular/core';
 
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 import { ProfileService } from '../../services/profile';
+import { PostService } from '../../services/post';
 import { Post } from '../../models/post.model';
 
 import { ProfileHeaderComponent } from '../../components/profile-haeder/profile-haeder';
@@ -18,7 +22,7 @@ import { ProfileStatsComponent } from '../../components/profile-stats/profile-st
 import { ProfilePostsGridComponent } from '../../components/posts-grid/posts-grid';
 import { PostModalComponent } from '../../components/post-modal/post-modal';
 import { AddPostModalComponent } from '../add-post-modal/add-post-modal';
-import { PostService } from '../../services/post';
+import { AuthService } from '../../../../core/services/auth';
 
 @Component({
   selector: 'app-profile-page',
@@ -35,28 +39,21 @@ import { PostService } from '../../services/post';
   styleUrl: './profile-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProfilePageComponent implements OnInit, OnDestroy {
+export class ProfilePageComponent implements OnDestroy {
 
   private profileService = inject(ProfileService);
-  private postService = inject(PostService); // ✅
-
-  /* -------------------- SIGNAL STATE -------------------- */
+  private postService = inject(PostService);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  /* -------------------- SERVICE SIGNALS -------------------- */
 
   profile = this.profileService.profile;
   posts = this.profileService.posts;
-  loading = this.profileService.loading;
-  error = this.profileService.error;
-
-  followerCount = this.profileService.followerCount;
-  followingCount = this.profileService.followingCount;
-  postsCount = this.profileService.postsCount;
 
   /* -------------------- TAB STATE -------------------- */
 
   activeTab = signal<'posts' | 'saved'>('posts');
-
   savedPosts = signal<Post[]>([]);
-  savedLoading = signal(false);
 
   /* -------------------- VIEW MODAL STATE -------------------- */
 
@@ -79,11 +76,26 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
   selectedEditPost: Post | null = null;
   showEditModal = false;
 
-  /* -------------------- INIT -------------------- */
+  /* -------------------- ROUTE REACTIVE LOAD -------------------- */
 
-  ngOnInit(): void {
-    this.profileService.loadProfile();
-  }
+  private routeParamSignal = toSignal(
+    this.route.paramMap,
+    { initialValue: this.route.snapshot.paramMap }
+  );
+
+constructor() {
+  effect(() => {
+    const params = this.routeParamSignal();
+    const userId = params?.get('id');
+
+    // Reset tab + saved data on profile switch
+    this.activeTab.set('posts');
+    this.savedPosts.set([]);
+    this.selectedPostId.set(null);
+
+    this.profileService.loadProfile(userId ?? undefined);
+  });
+}
 
   ngOnDestroy(): void {
     document.body.style.overflow = 'auto';
@@ -103,21 +115,11 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
     this.loadSavedPosts();
   }
 
-  loadSavedPosts(): void {
-
-    this.savedLoading.set(true);
-
-    this.postService.getPosts({
-      isSaved: true
-    }).subscribe({
-      next: (res) => {
+  private loadSavedPosts(): void {
+    this.postService.getPosts({ isSaved: true })
+      .subscribe(res => {
         this.savedPosts.set(res.data.items);
-        this.savedLoading.set(false);
-      },
-      error: () => {
-        this.savedLoading.set(false);
-      }
-    });
+      });
   }
 
   /* -------------------- EVENTS -------------------- */
@@ -126,27 +128,49 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
     this.profileService.toggleLike(post);
   }
 
-onToggleSave(post: Post): void {
+  onToggleSave(post: Post): void {
 
-  post.isSaved = !post.isSaved;
+    const previous = post.isSaved;
 
-  this.postService.toggleSave(post._id).subscribe({
-    next: (res) => {
+    // Optimistic update
+    this.savedPosts.update(list =>
+      list.map(p =>
+        p._id === post._id
+          ? { ...p, isSaved: !previous }
+          : p
+      )
+    );
 
-      post.isSaved = res.data.isSaved;
+    this.postService.toggleSave(post._id).subscribe({
+      next: (res) => {
+        const updated = res.data.isSaved;
 
-      // If unsaved inside saved tab → remove instantly
-      if (!post.isSaved && this.activeTab() === 'saved') {
-        this.savedPosts.set(
-          this.savedPosts().filter(p => p._id !== post._id)
+        this.savedPosts.update(list =>
+          list.map(p =>
+            p._id === post._id
+              ? { ...p, isSaved: updated }
+              : p
+          )
+        );
+
+        if (!updated && this.activeTab() === 'saved') {
+          this.savedPosts.update(list =>
+            list.filter(p => p._id !== post._id)
+          );
+        }
+      },
+      error: () => {
+        // rollback
+        this.savedPosts.update(list =>
+          list.map(p =>
+            p._id === post._id
+              ? { ...p, isSaved: previous }
+              : p
+          )
         );
       }
-    },
-    error: () => {
-      post.isSaved = !post.isSaved;
-    }
-  });
-}
+    });
+  }
 
   onViewPost(post: Post): void {
     if (!post) return;
@@ -160,6 +184,12 @@ onToggleSave(post: Post): void {
     this.selectedPostId.set(null);
     document.body.style.overflow = 'auto';
   }
+
+get isOwnProfile(): boolean {
+  const currentUserId = this.authService.getUserId();
+  const profile = this.profile(); // 👈 important
+  return !!profile && profile._id === currentUserId;
+}
 
   /* -------------------- EDIT FLOW -------------------- */
 

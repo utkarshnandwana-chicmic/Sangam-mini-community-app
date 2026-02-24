@@ -11,7 +11,7 @@
 
   <div class="avatar-preview">
     <img
-      [src]="previewUrl || (profile.profilePicture | imageUrl)"
+      [src]="(previewUrl || (profile.profilePicture | imageUrl))"
       class="avatar-img"
     />
   </div>

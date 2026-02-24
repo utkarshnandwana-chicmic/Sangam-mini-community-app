@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '../../constants/api-endpoints';
 import { RegisterRequest } from '../model/auth.model';
@@ -39,14 +39,13 @@ export class AuthService {
   }
 
 logout() {
-  return this.api.post<any>(
+  localStorage.removeItem('token');
+
+  return this.api.post<void>(
     API_ENDPOINTS.AUTH.LOGOUT,
     {}
   ).pipe(
-    tap({
-      next: () => localStorage.removeItem('token'),
-      error: () => localStorage.removeItem('token')
-    })
+    catchError(() => of(null))
   );
 }
 

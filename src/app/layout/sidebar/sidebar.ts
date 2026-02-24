@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { MatListModule } from '@angular/material/list';
 import { RouterModule, Router } from '@angular/router';
 import { MatDividerModule } from '@angular/material/divider';
@@ -10,6 +10,7 @@ import { AuthService } from '../../core/services/auth';
   imports: [RouterModule, MatListModule, MatDividerModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Sidebar {
 
@@ -20,20 +21,12 @@ export class Sidebar {
     private router: Router
   ) {}
 
-  onLogout() {
-    this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigateByUrl('/login', { replaceUrl: true });
-      },
-      error: () => {
-        this.router.navigateByUrl('/login', { replaceUrl: true });
-      }
-    });
-  }
+onLogout(): void {
+  this.authService.logout().subscribe();
+  this.router.navigateByUrl('/login', { replaceUrl: true });
+}
 
-  onCreatePost() {
-    console.log("Create Clicked");
-    
+  onCreatePost() {    
     this.createPost.emit(); 
   }
 }

@@ -1,18 +1,5 @@
 <div class="layout-container">
 
-  <!-- LOADING -->
-  <div *ngIf="loading()" class="state-layer loading">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- ERROR -->
-  <div *ngIf="error()" class="state-layer error">
-    <div class="error-toast">
-      <span class="icon">⚠️</span>
-      <span>{{ error() }}</span>
-    </div>
-  </div>
-
   <!-- PROFILE -->
   <main class="profile-content" *ngIf="profile() as profile">
 
@@ -21,12 +8,12 @@
     <div class="content-body">
 
       <!-- STATS -->
-      <app-profile-stats
-        class="stats-section"
-        [postsCount]="postsCount()"
-        [followerCount]="followerCount()"
-        [followingCount]="followingCount()">
-      </app-profile-stats>
+<app-profile-stats
+  class="stats-section"
+  [postsCount]="profile.postsCount"
+  [followerCount]="profile.followerCount"
+  [followingCount]="profile.followingCount">
+</app-profile-stats>
 
       <!-- GRID SECTION -->
       <div class="grid-section">
@@ -34,48 +21,18 @@
         <!-- TABS -->
         <div class="tabs">
 
-          <!-- POSTS TAB -->
           <button
             class="tab"
             [class.active]="activeTab() === 'posts'"
             (click)="switchToPosts()">
-
-            <svg fill="currentColor" height="12" viewBox="0 0 24 24" width="12">
-              <rect fill="none" height="18" stroke="currentColor"
-                stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" width="18" x="3" y="3"></rect>
-              <line fill="none" stroke="currentColor"
-                stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" x1="9.015" x2="9.015"
-                y1="3" y2="21"></line>
-              <line fill="none" stroke="currentColor"
-                stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" x1="14.985" x2="14.985"
-                y1="3" y2="21"></line>
-              <line fill="none" stroke="currentColor"
-                stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" x1="21" x2="3"
-                y1="9.015" y2="9.015"></line>
-              <line fill="none" stroke="currentColor"
-                stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" x1="21" x2="3"
-                y1="14.985" y2="14.985"></line>
-            </svg>
-
             POSTS
           </button>
 
-          <!-- SAVED TAB -->
           <button
+          *ngIf="isOwnProfile"
             class="tab"
             [class.active]="activeTab() === 'saved'"
             (click)="switchToSaved()">
-
-            <svg fill="none" stroke="currentColor" stroke-width="2"
-              height="12" viewBox="0 0 24 24" width="12">
-              <polygon points="20 21 12 13.44 4 21 4 3 20 3 20 21"></polygon>
-            </svg>
-
             SAVED
           </button>
 
@@ -99,13 +56,8 @@
 
         <!-- EMPTY STATE -->
         <div
-          *ngIf="activeTab() === 'saved' && !savedPosts().length && !savedLoading()"
+          *ngIf="activeTab() === 'saved' && !savedPosts().length"
           class="empty-state">
-
-          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="20 21 12 13.44 4 21 4 3 20 3 20 21"></polygon>
-          </svg>
-
           <p>No saved posts yet.</p>
         </div>
 
@@ -113,15 +65,15 @@
     </div>
 
     <!-- POST MODAL -->
-<app-post-modal
-  *ngIf="selectedPost() as selectedPost"
-  [post]="selectedPost"
-  [profile]="profile"
-  (close)="closePost()"
-  (toggleLike)="onToggleLike($event)"
-  (toggleSave)="onToggleSave($event)"
-  (editPost)="openEditModal($event)">
-</app-post-modal>
+    <app-post-modal
+      *ngIf="selectedPost() as selectedPost"
+      [post]="selectedPost"
+      [profile]="profile"
+      (close)="closePost()"
+      (toggleLike)="onToggleLike($event)"
+      (toggleSave)="onToggleSave($event)"
+      (editPost)="openEditModal($event)">
+    </app-post-modal>
 
     <!-- EDIT POST MODAL -->
     <app-add-post-modal

@@ -13,7 +13,7 @@
     </div>
 
     <div class="avatar-actions">
-      <ng-container *ngIf="isOwnProfile(); else strangerButtons">
+      <ng-container *ngIf="isOwnProfile; else strangerButtons">
         <button class="btn btn-secondary btn-full" (click)="onEditProfile()">
           Edit Profile
         </button>
@@ -27,7 +27,7 @@
       </ng-template>
     </div>
 
-    <div class="wallet-pill left-align" *ngIf="profile.walletBalance >= 0">
+    <div class="wallet-pill left-align" >
       <div class="wallet-icon">💰</div>
       <div class="wallet-details">
         <span class="label">Balance</span>

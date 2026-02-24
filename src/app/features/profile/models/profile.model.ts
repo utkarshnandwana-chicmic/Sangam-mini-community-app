@@ -25,19 +25,18 @@ export interface SubscriptionPlan {
 export interface ProfileUser {
   _id: string;
 
-  phone: string;
-  countryCode: string;
+  phone?: string;
+  countryCode?: string;
 
   name: string;
   userName: string;
-  email: string;
-  gender: number;
+  email?: string;
+  gender?: number;
 
   privateAccount: boolean;
 
   walletBalance: number;
 
-  // ✅ ADD THESE OPTIONAL FIELDS
   description?: string;
   link?: string;
   address?: string;
@@ -45,9 +44,20 @@ export interface ProfileUser {
   referralCode?: string;
   profilePicture?: string;
 
-  createdAt: string;
-  updatedAt: string;
-
   subscriptionPlan: SubscriptionPlan | null;
+
+  // ✅ COUNTS FROM BACKEND
+  followerCount: number;
+  followingCount: number;
+  postsCount: number;
+
+  // Optional flags from API
+  isFollower?: boolean;
+  isFollowing?: boolean;
+  isRequestedFollower?: boolean;
+  isRequestedFollowing?: boolean;
+
+  createdAt?: string;
+  updatedAt?: string;
 }
 

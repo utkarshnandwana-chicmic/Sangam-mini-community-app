@@ -6,7 +6,6 @@ import {
   ChangeDetectionStrategy,
   HostListener,
   OnDestroy,
-  OnInit,
   OnChanges,
   SimpleChanges,
   inject,
@@ -23,6 +22,7 @@ import { ImageUrlPipe } from '../../../../core/pipes/image-url-pipe';
 import { CommentService } from '../../services/comment';
 import { ProfileService } from '../../services/profile';
 import { AuthService } from '../../../../core/services/auth';
+import { ConfirmDialogService } from '../../../../core/services/confirm-dialog';
 
 @Component({
   selector: 'app-post-modal',
@@ -36,8 +36,7 @@ import { AuthService } from '../../../../core/services/auth';
   styleUrl: './post-modal.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PostModalComponent
-  implements OnInit, OnDestroy, OnChanges {
+export class PostModalComponent implements OnDestroy, OnChanges {
 
   @Input({ required: true }) post!: Post;
   @Input({ required: true }) profile!: ProfileUser;
@@ -47,6 +46,13 @@ export class PostModalComponent
   @Output() editPost = new EventEmitter<Post>();
   @Output() toggleSave = new EventEmitter<Post>();
 
+  private commentService = inject(CommentService);
+  private profileService = inject(ProfileService);
+  private authService = inject(AuthService);
+  private confirmDialog = inject(ConfirmDialogService);
+
+  /* ---------------- STATE ---------------- */
+
   currentIndex = 0;
   newComment = '';
   editingCommentId: string | null = null;
@@ -55,29 +61,28 @@ export class PostModalComponent
   replyText = '';
   replyToCommentId: string | null = null;
   private lastPostId: string | null = null;
-
   showMenu = false;
 
-  private commentService = inject(CommentService);
-  private profileService = inject(ProfileService);
-  private authService = inject(AuthService);
-
-  /* ---------------- COMMENTS SIGNAL ---------------- */
+  /* ---------------- COMMENTS ---------------- */
 
   readonly comments = this.commentService.comments;
   readonly commentsLoading = this.commentService.loading;
 
   readonly rootComments = computed(() =>
-    this.comments().filter(
-      c => c.commentId === null || c.commentId === undefined
-    )
+    this.comments().filter(c => !c.commentId)
   );
 
-  getReplies(parentId: string) {
-    return this.comments().filter(
-      c => String(c.commentId) === String(parentId)
-    );
-  }
+  readonly repliesMap = computed(() => {
+    const map = new Map<string, any[]>();
+    for (const comment of this.comments()) {
+      if (comment.commentId) {
+        const key = String(comment.commentId);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(comment);
+      }
+    }
+    return map;
+  });
 
   /* ---------------- OWNER CHECK ---------------- */
 
@@ -88,16 +93,6 @@ export class PostModalComponent
 
   /* ---------------- LIFECYCLE ---------------- */
 
-  ngOnInit(): void {
-    document.body.style.overflow = 'hidden';
-    this.loadComments();
-  }
-
-  ngOnDestroy(): void {
-    document.body.style.overflow = 'auto';
-    this.commentService.clear();
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
 
     if (!this.post?._id) return;
@@ -107,6 +102,13 @@ export class PostModalComponent
       this.currentIndex = 0;
       this.loadComments();
     }
+
+    document.body.style.overflow = 'hidden';
+  }
+
+  ngOnDestroy(): void {
+    document.body.style.overflow = 'auto';
+    this.commentService.clear();
   }
 
   private loadComments(): void {
@@ -121,9 +123,11 @@ export class PostModalComponent
     this.showMenu = !this.showMenu;
   }
 
-  @HostListener('document:click')
-  closeMenu(): void {
-    this.showMenu = false;
+  @HostListener('document:click', ['$event'])
+  closeMenu(event: Event): void {
+    if (!(event.target as HTMLElement).closest('.menu-wrapper')) {
+      this.showMenu = false;
+    }
   }
 
   onEditPost(): void {
@@ -131,24 +135,30 @@ export class PostModalComponent
     this.editPost.emit(this.post);
   }
 
-  onDeletePost(): void {
+async onDeletePost(): Promise<void> {
 
-    this.showMenu = false;
+  this.showMenu = false;
 
-    const confirmed = confirm('Are you sure you want to delete this post?');
-    if (!confirmed) return;
+  const confirmed = await this.confirmDialog.confirm({
+    title: 'Delete Post',
+    message: 'Are you sure you want to delete this post?',
+    confirmText: 'Delete',
+    cancelText: 'Cancel'
+  });
 
-    this.profileService.deletePost(this.post._id);
-    this.close.emit();
-  }
+  if (!confirmed) return;
+
+  this.profileService.deletePost(this.post._id);
+  this.close.emit();
+}
 
   /* ---------------- MEDIA ---------------- */
 
   get hasMultipleMedia(): boolean {
-    return this.post?.media?.length > 1;
+    return (this.post?.media?.length ?? 0) > 1;
   }
 
-  get currentMedia() {
+  get currentMedia(): Post['media'][number] | undefined {
     return this.post?.media?.[this.currentIndex];
   }
 
@@ -169,10 +179,14 @@ export class PostModalComponent
       this.post.media.length;
   }
 
-  /* ---------------- LIKE ---------------- */
+  /* ---------------- LIKE / SAVE ---------------- */
 
   onToggleLike(): void {
     this.toggleLike.emit(this.post);
+  }
+
+  onToggleSave(): void {
+    this.toggleSave.emit(this.post);
   }
 
   /* ---------------- COMMENT CREATE ---------------- */
@@ -201,12 +215,11 @@ export class PostModalComponent
   /* ---------------- COMMENT DELETE ---------------- */
 
   onDelete(commentId: string): void {
-
     this.commentService.deleteComment(commentId);
     this.profileService.decrementCommentCount(this.post._id);
   }
 
-  /* ---------------- PERMISSIONS ---------------- */
+  /* ---------------- COMMENT PERMISSIONS ---------------- */
 
   canDeleteComment(comment: any): boolean {
     const currentUserId = this.authService.getUserId();
@@ -223,7 +236,7 @@ export class PostModalComponent
     return comment.userId === currentUserId;
   }
 
-  trackByCommentId(index: number, item: any) {
+  trackByCommentId(index: number, item: any): string {
     return item._id;
   }
 
@@ -244,15 +257,13 @@ export class PostModalComponent
     this.prev();
   }
 
-  /* ---------------- COMMENT EDIT / REPLY ---------------- */
+  /* ---------------- COMMENT LIKE ---------------- */
 
   toggleCommentLike(comment: any): void {
     this.commentService.toggleLike(comment);
   }
 
-  setReply(commentId: string): void {
-    this.replyToCommentId = commentId;
-  }
+  /* ---------------- COMMENT EDIT / REPLY ---------------- */
 
   startEdit(comment: any): void {
     this.editingCommentId = comment._id;
@@ -296,8 +307,4 @@ export class PostModalComponent
     this.activeReplyCommentId = null;
     this.replyText = '';
   }
-
-  onToggleSave(): void {
-  this.toggleSave.emit(this.post);
-}
 }

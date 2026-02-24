@@ -7,12 +7,16 @@ import { environment } from '../../../environments/environment';
 })
 export class ImageUrlPipe implements PipeTransform {
 
-  transform(path: string | null | undefined): string {
+  transform(value: string | null | undefined): string {
 
-  if (!path) {
-    return 'https://i.imgur.com/1XK6F4K.png'; 
-  }
+    if (!value) return '';
 
-    return environment.cdnUrl + path;
+    // ✅ If already full URL → return as is
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+
+    // ✅ Otherwise treat as filePath
+    return environment.cdnUrl + value;
   }
 }

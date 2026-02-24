@@ -76,7 +76,7 @@
             <div class="comment-avatar">
 <ng-container *ngIf="comment.user as user; else fallback">
   <img *ngIf="user.profilePicture; else fallback"
-       [src]="user.profilePicture" />
+       [src]="user.profilePicture | imageUrl" />
 </ng-container>              <ng-template #fallback>
                 <div class="avatar-fallback">{{ comment.user?.userName?.charAt(0) }}</div>
               </ng-template>
@@ -116,7 +116,7 @@
           </div>
 
           <div class="reply-list">
-            <div class="comment-item reply-item" *ngFor="let reply of getReplies(comment._id)">
+            <div class="comment-item reply-item" *ngFor="let reply of repliesMap().get(comment._id) || []; trackBy: trackByCommentId">
               <div class="comment-avatar mini"><img [src]="reply.user?.profilePicture" /></div>
               <div class="comment-body">
                 <span class="username-link">{{ reply.user?.userName }}</span>

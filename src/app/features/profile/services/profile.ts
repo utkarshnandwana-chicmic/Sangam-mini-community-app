@@ -1,5 +1,5 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { finalize, switchMap, tap } from 'rxjs';
+import { inject, Injectable, signal, computed } from '@angular/core';
+import { tap } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
@@ -11,6 +11,7 @@ import { UpdateProfileRequest } from '../../../core/model/update-profile.model';
 
 import { cleanObject } from '../../../core/utils/object.util';
 import { PostService } from './post';
+import { AuthService } from '../../../core/services/auth';
 
 interface PaginatedPosts {
   items: Post[];
@@ -24,66 +25,69 @@ export class ProfileService {
 
   private api = inject(ApiService);
   private postService = inject(PostService);
+  private authService = inject(AuthService);
 
   // =========================
-  // STATE (Signals)
+  // STATE
   // =========================
 
   private _profile = signal<ProfileUser | null>(null);
   private _posts = signal<Post[]>([]);
-  private _loading = signal<boolean>(false);
-  private _error = signal<string | null>(null);
   private _isNext = signal<boolean>(false);
-
-  private _followerCount = signal<number>(0);
-  private _followingCount = signal<number>(0);
-  private _postsCount = signal<number>(0);
 
   private viewedPosts = new Set<string>();
 
   // =========================
-  // PUBLIC READONLY SIGNALS
+  // PUBLIC SIGNALS
   // =========================
 
   readonly profile = this._profile.asReadonly();
   readonly posts = this._posts.asReadonly();
-  readonly loading = this._loading.asReadonly();
-  readonly error = this._error.asReadonly();
   readonly isNext = this._isNext.asReadonly();
 
-  readonly followerCount = this._followerCount.asReadonly();
-  readonly followingCount = this._followingCount.asReadonly();
-  readonly postsCount = this._postsCount.asReadonly();
+  // ✅ Derive counts from profile (NO duplicate state)
+
+  readonly postsCount = computed(() =>
+    this._profile()?.postsCount ?? 0
+  );
+
+  readonly followerCount = computed(() =>
+    this._profile()?.followerCount ?? 0
+  );
+
+  readonly followingCount = computed(() =>
+    this._profile()?.followingCount ?? 0
+  );
 
   // =========================
   // LOAD PROFILE + POSTS
   // =========================
 
-  loadProfile(): void {
+loadProfile(userId?: string): void {
 
-    this._loading.set(true);
-    this._error.set(null);
+  const finalUserId = userId || this.authService.getUserId();
+  if (!finalUserId) return;
 
-    this.api
-      .get<ApiResponse<ProfileUser>>(API_ENDPOINTS.USER.DETAILS)
-      .pipe(
-        switchMap((res) => {
+  this.api
+    .get<ApiResponse<{ items: ProfileUser[] }>>(
+      API_ENDPOINTS.USER.GET_ALL,
+      { _id: finalUserId }
+    )
+    .subscribe({
+      next: (res) => {
 
-          const profile = res.data;
-          this._profile.set(profile);
+        const user = res.data.items?.[0];
+        if (!user) return;
 
-          this.loadCounts(profile._id);
+        // ✅ DO NOT modify profilePicture
+        // It should already be filePath stored in DB
 
-          return this.loadUserPosts(profile._id);
-        }),
-        finalize(() => this._loading.set(false))
-      )
-      .subscribe({
-        error: () => {
-          this._error.set('Failed to load profile.');
-        }
-      });
-  }
+        this._profile.set(user);
+
+        this.loadUserPosts(finalUserId).subscribe();
+      }
+    });
+}
 
   // =========================
   // LOAD USER POSTS
@@ -114,36 +118,10 @@ export class ProfileService {
   }
 
   // =========================
-  // LOAD COUNTS
-  // =========================
-
-  loadCounts(userId: string): void {
-
-    this.api
-      .get<ApiResponse<{ items: any[] }>>(
-        API_ENDPOINTS.USER.GET_ALL,
-        { _id: userId }
-      )
-      .subscribe({
-        next: (res) => {
-
-          const user = res.data.items[0];
-
-          this._followerCount.set(user?.followerCount ?? 0);
-          this._followingCount.set(user?.followingCount ?? 0);
-          this._postsCount.set(user?.postsCount ?? 0);
-        }
-      });
-  }
-
-  // =========================
   // UPDATE PROFILE
   // =========================
 
   updateProfile(payload: UpdateProfileRequest) {
-
-    this._loading.set(true);
-    this._error.set(null);
 
     const cleanedPayload = cleanObject(payload);
 
@@ -164,23 +142,16 @@ export class ProfileService {
               ...updatedUser
             });
           }
-        }),
-        finalize(() => this._loading.set(false))
+        })
       );
   }
 
   // =========================
-  // ADD POST (Optimistic Insert)
+  // ADD POST (Optimistic)
   // =========================
 
   addPostOptimistically(post: Post): void {
-
-    this._posts.update(current => [
-      post,
-      ...current
-    ]);
-
-    this._postsCount.update(count => count + 1);
+    this._posts.update(current => [post, ...current]);
   }
 
   // =========================
@@ -188,9 +159,6 @@ export class ProfileService {
   // =========================
 
   updatePost(postId: string, payload: Partial<CreatePostRequest>) {
-
-    this._loading.set(true);
-    this._error.set(null);
 
     return this.postService.updatePost(postId, payload).pipe(
       tap((res) => {
@@ -204,37 +172,28 @@ export class ProfileService {
               : p
           )
         );
-      }),
-      finalize(() => this._loading.set(false))
+      })
     );
   }
 
   // =========================
-// DELETE POST (Optimistic)
-// =========================
+  // DELETE POST (Optimistic)
+  // =========================
 
-deletePost(postId: string): void {
+  deletePost(postId: string): void {
 
-  const previousPosts = this._posts();
-  const previousCount = this._postsCount();
+    const previousPosts = this._posts();
 
-  // Optimistically remove from UI
-  this._posts.update(posts =>
-    posts.filter(p => p._id !== postId)
-  );
+    this._posts.update(posts =>
+      posts.filter(p => p._id !== postId)
+    );
 
-  this._postsCount.update(count =>
-    Math.max(count - 1, 0)
-  );
-
-  this.postService.deletePost(postId).subscribe({
-    error: () => {
-      // Rollback if API fails
-      this._posts.set(previousPosts);
-      this._postsCount.set(previousCount);
-    }
-  });
-}
+    this.postService.deletePost(postId).subscribe({
+      error: () => {
+        this._posts.set(previousPosts);
+      }
+    });
+  }
 
   // =========================
   // LIKE TOGGLE (Optimistic)
@@ -280,36 +239,7 @@ deletePost(postId: string): void {
   }
 
   // =========================
-  // COMMENT COUNT SYNC
-  // =========================
-
-  incrementCommentCount(postId: string): void {
-
-    this._posts.update(posts =>
-      posts.map(p =>
-        p._id === postId
-          ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
-          : p
-      )
-    );
-  }
-
-  decrementCommentCount(postId: string): void {
-
-    this._posts.update(posts =>
-      posts.map(p =>
-        p._id === postId
-          ? {
-              ...p,
-              commentsCount: Math.max((p.commentsCount || 1) - 1, 0)
-            }
-          : p
-      )
-    );
-  }
-
-  // =========================
-  // MARK POST AS VIEWED
+  // MARK VIEW
   // =========================
 
   markPostAsViewed(postId: string): void {
@@ -323,7 +253,7 @@ deletePost(postId: string): void {
       this._posts.update(posts =>
         posts.map(p =>
           p._id === postId
-            ? { ...p, viewCount: p.viewCount + 1 }
+            ? { ...p, viewCount: (p.viewCount ?? 0) + 1 }
             : p
         )
       );
@@ -331,7 +261,34 @@ deletePost(postId: string): void {
   }
 
   // =========================
-  // GET CURRENT PROFILE
+  // COMMENT COUNT SYNC
+  // =========================
+
+  incrementCommentCount(postId: string): void {
+    this._posts.update(posts =>
+      posts.map(p =>
+        p._id === postId
+          ? { ...p, commentsCount: (p.commentsCount ?? 0) + 1 }
+          : p
+      )
+    );
+  }
+
+  decrementCommentCount(postId: string): void {
+    this._posts.update(posts =>
+      posts.map(p =>
+        p._id === postId
+          ? {
+              ...p,
+              commentsCount: Math.max((p.commentsCount ?? 1) - 1, 0)
+            }
+          : p
+      )
+    );
+  }
+
+  // =========================
+  // CURRENT PROFILE
   // =========================
 
   get currentProfile(): ProfileUser | null {

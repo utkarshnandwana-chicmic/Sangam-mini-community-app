@@ -35,5 +35,9 @@ export const API_ENDPOINTS = {
   FILE:{
     UPLOAD: '/v1/file/upload',
     UPLOAD_MANY: '/v1/file/uploadMany'
-  }
+  },
+
+  SEARCH: {
+  BASE: '/v1/search'
+}
 };

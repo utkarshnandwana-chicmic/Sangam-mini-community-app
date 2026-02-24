@@ -28,10 +28,10 @@ export class ProfileHeaderComponent {
 
   @Input({ required: true }) profile!: ProfileUser;
 
-  readonly isOwnProfile = computed(() => {
-    const currentUserId = this.authService.getUserId();
-    return !!this.profile && currentUserId === this.profile._id;
-  });
+get isOwnProfile(): boolean {
+  const currentUserId = this.authService.getUserId();
+  return !!this.profile && currentUserId === this.profile._id;
+}
 
   onEditProfile(): void {
     this.router.navigate(['/profile/edit']);
