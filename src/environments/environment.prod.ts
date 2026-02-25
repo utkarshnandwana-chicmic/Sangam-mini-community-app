@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://virtufy.ai'
+  apiUrl: 'https://virtufy-staging.virtufy.ai',
+    cdnUrl: 'https://d14dxtyldssyrw.cloudfront.net/'
 };
