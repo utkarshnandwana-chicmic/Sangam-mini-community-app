@@ -6,6 +6,13 @@ import { CreatePostRequest, Post } from '../models/post.model';
 import { ApiResponse } from '../models/api-response.model';
 import { cleanObject } from '../../../core/utils/object.util';
 
+interface SaveToggleApiResponse {
+  data?: {
+    isSaved?: boolean;
+    saved?: boolean;
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class PostService {
 
@@ -51,8 +58,8 @@ export class PostService {
   // SAVE TOGGLE  ✅ NEW
   // =========================
 
-  toggleSave(postId: string) {
-    return this.api.post<{ data: { isSaved: boolean } }>(
+  setSavedState(postId: string, shouldSave: boolean) {
+    return this.api.post<SaveToggleApiResponse>(
       `${API_ENDPOINTS.POST.SAVE}/${postId}`,
       {}
     );

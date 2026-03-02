@@ -7,6 +7,7 @@
   align-items: center;
   justify-content: center;
   z-index: 10001;
+  overflow: hidden;
 }
 
 .dialog {
@@ -16,6 +17,8 @@
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.2s ease;
+  max-height: 90vh;
+  overflow: hidden;
 }
 
 .dialog h3 {

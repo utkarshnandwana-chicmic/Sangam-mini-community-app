@@ -37,6 +37,11 @@
   animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.modal-body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .modal-header {
   padding: 20px 24px;
   display: flex;
@@ -54,6 +59,7 @@
 .form-scroll-container {
   max-height: 70vh;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px;
 
   &::-webkit-scrollbar { width: 5px; }
@@ -127,6 +133,94 @@
       &:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1); }
     }
   }
+}
+
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip {
+  border: none;
+  background: #eef4ff;
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.suggestions-list {
+  margin-top: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.suggestion-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &:hover {
+    background: #f7fbff;
+  }
+}
+
+.suggestion-title {
+  color: #202124;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.suggestion-sub {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.location-meta {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.location-coords {
+  font-size: 0.82rem;
+  color: #1f2937;
+}
+
+.clear-link {
+  border: none;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.helper-text {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.error-text {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #dc2626;
+  font-weight: 600;
 }
 
 .section-divider {

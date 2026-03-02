@@ -5,24 +5,11 @@
   --text-secondary: #8e8e8e;
   --border-light: #efefef;
   --border-medium: #dbdbdb;
-  --sidebar-width: 245px; /* Define this to maintain consistency */
-  --sidebar-collapsed-width: 73px;
 }
 
 .layout-container {
-  min-height: 100vh;
+  min-height: 100%;
   background-color: var(--bg-body);
-  /* CHANGE: Push the whole layout to the right so it doesn't go under the sidebar */
-  padding-left: var(--sidebar-width); 
-  transition: padding-left 0.3s ease;
-
-  @media (max-width: 1260px) {
-    padding-left: var(--sidebar-collapsed-width);
-  }
-
-  @media (max-width: 768px) {
-    padding-left: 0; /* Sidebar usually becomes a bottom nav on small mobile */
-  }
 }
 
 .profile-content {

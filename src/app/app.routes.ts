@@ -54,6 +54,12 @@ export const routes: Routes = [
             .then((m) => m.Settings),
       },
       {
+        path: 'posts/create',
+        loadComponent: () =>
+          import('./features/profile/pages/add-post-route/add-post-route')
+            .then((m) => m.AddPostRouteComponent),
+      },
+      {
         path: '',
         redirectTo: 'home',
         pathMatch: 'full',

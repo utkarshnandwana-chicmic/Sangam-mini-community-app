@@ -1,7 +1,11 @@
 <div class="layout-container">
 
+  <div class="state-layer loading" *ngIf="profileLoading()">
+    <div class="spinner"></div>
+  </div>
+
   <!-- PROFILE -->
-  <main class="profile-content" *ngIf="profile() as profile">
+  <main class="profile-content" *ngIf="!profileLoading() && profile() as profile">
 
     <app-profile-header [profile]="profile"></app-profile-header>
 
@@ -84,5 +88,9 @@
     </app-add-post-modal>
 
   </main>
+
+  <div class="state-layer error" *ngIf="!profileLoading() && !profile()">
+    <div class="error-toast">Unable to load profile.</div>
+  </div>
 
 </div>

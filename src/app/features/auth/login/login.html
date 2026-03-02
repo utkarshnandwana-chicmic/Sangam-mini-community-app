@@ -8,14 +8,9 @@
       <p class="subtitle">Log in to see what your community is up to.</p>
     </div>
 
-<div class="error-feedback" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-  <span *ngIf="loginForm.get('email')?.hasError('required')">Email is required.</span>
-  <span *ngIf="loginForm.get('email')?.hasError('email')">Invalid email format.</span>
-  <span *ngIf="loginForm.get('email')?.hasError('apiError')">
-    {{ loginForm.get('email')?.getError('apiError') }}
-  </span>
-</div>
-
+    <div class="error-feedback form-error" *ngIf="loginForm.errors?.['apiError']">
+      {{ loginForm.errors?.['apiError'] }}
+    </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
       
@@ -25,6 +20,7 @@
           <input 
             type="email" 
             formControlName="email" 
+            appNoLeadingSpace
             placeholder="name@example.com"
             class="custom-input"
           />
@@ -32,6 +28,9 @@
         <div class="error-feedback" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
           <span *ngIf="loginForm.get('email')?.hasError('required')">Email is required.</span>
           <span *ngIf="loginForm.get('email')?.hasError('email')">Invalid email format.</span>
+          <span *ngIf="loginForm.get('email')?.hasError('apiError')">
+            {{ loginForm.get('email')?.getError('apiError') }}
+          </span>
         </div>
       </div>
 
@@ -41,6 +40,7 @@
           <input 
             [type]="hidePassword ? 'password' : 'text'" 
             formControlName="password" 
+            appNoLeadingSpace
             placeholder="••••••••"
             class="custom-input"
           />
@@ -68,12 +68,12 @@
       <button 
         class="primary-btn" 
         type="submit" 
-        [disabled]="loginForm.invalid">
-        <span>Login</span>
+        [disabled]="loginForm.invalid || isSubmitting()">
+        <span>{{ isSubmitting() ? 'Logging in...' : 'Login' }}</span>
       </button>
 
       <div class="footer-links">
-        <p>New here? <a routerLink="/register" class="link-text">Create an account</a></p>
+        <p>Don't have an account? <a routerLink="/register" class="link-text">Sign Up</a></p>
         <div class="divider"><span>OR</span></div>
         <a routerLink="/forgot-password" class="forgot-password">Forgot password?</a>
       </div>

@@ -56,7 +56,21 @@
       <div class="form-field">
         <label>Hashtags</label>
         <div class="input-wrapper">
-          <input type="text" formControlName="hashtags" placeholder="e.g. photography, nature, vibes" />
+          <input
+            type="text"
+            #hashtagInput
+            placeholder="Type hashtag and press space, enter or #"
+            (keydown)="onHashtagKeydown($event, hashtagInput)"
+            (blur)="onHashtagBlur(hashtagInput)" />
+        </div>
+        <div class="chips-wrap" *ngIf="hashtags().length">
+          <button
+            type="button"
+            class="chip"
+            *ngFor="let tag of hashtags()"
+            (click)="removeHashtag(tag)">
+            #{{ tag }} <span aria-hidden="true">✕</span>
+          </button>
         </div>
       </div>
 
@@ -117,15 +131,62 @@
       <div class="form-field">
         <label>Tag Users</label>
         <div class="input-wrapper">
-          <input formControlName="taggedUserIds" placeholder="User IDs separated by commas" />
+          <input
+            [value]="taggedUserQuery()"
+            placeholder="Search users by name or username"
+            (input)="onTaggedUserInput($any($event.target).value)"
+            (blur)="onTaggedUserBlur()"
+            (keydown)="onTaggedUserKeydown($event)" />
+        </div>
+        <div class="error-text" *ngIf="taggedUserError()">{{ taggedUserError() }}</div>
+        <div class="chips-wrap" *ngIf="taggedUsers().length">
+          <button
+            type="button"
+            class="chip"
+            *ngFor="let user of taggedUsers()"
+            (click)="removeTaggedUser(user._id)">
+            @{{ user.userName || user.name }} <span aria-hidden="true">✕</span>
+          </button>
+        </div>
+        <div class="suggestions-list" *ngIf="taggedUserQuery().trim().length >= 2 && userSuggestions().length">
+          <button
+            type="button"
+            class="suggestion-item"
+            *ngFor="let user of userSuggestions()"
+            (click)="addTaggedUser(user)">
+            <span class="suggestion-title">{{ user.name }}</span>
+            <span class="suggestion-sub">@{{ user.userName }}</span>
+          </button>
         </div>
       </div>
 
       <div class="form-field">
         <label>Location</label>
         <div class="input-wrapper">
-          <input formControlName="address" placeholder="Add location" />
+          <input
+            [value]="locationQuery()"
+            placeholder="Search location"
+            (input)="onLocationInput($any($event.target).value)" />
         </div>
+        <div class="location-meta" *ngIf="selectedLocation()">
+          <span class="location-coords">
+            {{ selectedLocation()!.latitude | number:'1.4-6' }}, {{ selectedLocation()!.longitude | number:'1.4-6' }}
+          </span>
+          <button type="button" class="clear-link" (click)="clearLocation()">Clear</button>
+        </div>
+        <div class="suggestions-list" *ngIf="locationQuery().trim().length >= 2 && locationSuggestions().length">
+          <button
+            type="button"
+            class="suggestion-item"
+            *ngFor="let suggestion of locationSuggestions()"
+            (click)="selectLocation(suggestion)">
+            <span class="suggestion-title">{{ suggestion.displayName }}</span>
+            <span class="suggestion-sub">
+              {{ suggestion.latitude | number:'1.4-6' }}, {{ suggestion.longitude | number:'1.4-6' }}
+            </span>
+          </button>
+        </div>
+        <div class="helper-text" *ngIf="isLocationLoading()">Finding locations...</div>
       </div>
 
     </div>
@@ -143,6 +204,7 @@
       <button type="button" class="submit-btn" (click)="submit()" [disabled]="
   isUploading() ||
   isPosting() ||
+  hasInvalidTaggedUserInput() ||
   !uploadedMedia().length ||
   (editMode && !hasChanges())
 ">

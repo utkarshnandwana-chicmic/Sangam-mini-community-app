@@ -1,22 +1,9 @@
 <div class="auth-wrapper">
   <div class="register-container">
-    
-    <div class="progress-section" *ngIf="currentStep < 4">
-      <div class="progress-header">
-        <!-- <span class="step-count">Step {{ currentStep }} of 3</span> -->
-        <!-- <span class="step-title">{{ getStepLabel() }}</span> -->
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" [style.width.%]="(currentStep / 3) * 100"></div>
-      </div>
-    </div>
 
-    <div class="alert-overlay">
+    <div class="alert-overlay" *ngIf="errorMessage">
       <div *ngIf="errorMessage" class="alert error animate-slide-in">
         <span class="icon">⚠️</span> {{ errorMessage }}
-      </div>
-      <div *ngIf="successMessage && currentStep !== 4" class="alert success animate-slide-in">
-        <span class="icon">✅</span> {{ successMessage }}
       </div>
     </div>
 
@@ -32,6 +19,7 @@
         *ngIf="currentStep === 2" 
         [otpForm]="otpForm" 
         [isLoading]="isLoading" 
+        (onBack)="currentStep = 1"
         (onVerify)="verifyOtp()">
       </app-otp-step>
 

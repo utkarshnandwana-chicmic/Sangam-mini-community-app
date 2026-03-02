@@ -36,3 +36,24 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+
+/* Hard lock sidebar scrolling in both directions */
+.main-sidebar,
+.main-sidebar .mat-drawer-inner-container,
+.main-sidebar app-sidebar,
+.main-sidebar .sidebar-wrapper {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-sidebar::-webkit-scrollbar,
+.main-sidebar .mat-drawer-inner-container::-webkit-scrollbar,
+.main-sidebar app-sidebar::-webkit-scrollbar,
+.main-sidebar .sidebar-wrapper::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}

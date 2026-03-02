@@ -1,5 +1,5 @@
 import { inject, Injectable, signal, computed } from '@angular/core';
-import { tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
@@ -34,6 +34,8 @@ export class ProfileService {
   private _profile = signal<ProfileUser | null>(null);
   private _posts = signal<Post[]>([]);
   private _isNext = signal<boolean>(false);
+  private _profileLoading = signal<boolean>(false);
+  private activeProfileRequestId = 0;
 
   private viewedPosts = new Set<string>();
 
@@ -44,6 +46,7 @@ export class ProfileService {
   readonly profile = this._profile.asReadonly();
   readonly posts = this._posts.asReadonly();
   readonly isNext = this._isNext.asReadonly();
+  readonly profileLoading = this._profileLoading.asReadonly();
 
   // ✅ Derive counts from profile (NO duplicate state)
 
@@ -67,6 +70,12 @@ loadProfile(userId?: string): void {
 
   const finalUserId = userId || this.authService.getUserId();
   if (!finalUserId) return;
+  const requestId = ++this.activeProfileRequestId;
+
+  this._profileLoading.set(true);
+  this._profile.set(null);
+  this._posts.set([]);
+  this._isNext.set(false);
 
   this.api
     .get<ApiResponse<{ items: ProfileUser[] }>>(
@@ -75,16 +84,31 @@ loadProfile(userId?: string): void {
     )
     .subscribe({
       next: (res) => {
+        if (requestId !== this.activeProfileRequestId) return;
 
         const user = res.data.items?.[0];
-        if (!user) return;
+        if (!user) {
+          this._profileLoading.set(false);
+          return;
+        }
 
         // ✅ DO NOT modify profilePicture
         // It should already be filePath stored in DB
 
         this._profile.set(user);
 
-        this.loadUserPosts(finalUserId).subscribe();
+        this.loadUserPosts(finalUserId)
+          .pipe(finalize(() => {
+            if (requestId === this.activeProfileRequestId) {
+              this._profileLoading.set(false);
+            }
+          }))
+          .subscribe();
+      },
+      error: () => {
+        if (requestId === this.activeProfileRequestId) {
+          this._profileLoading.set(false);
+        }
       }
     });
 }
@@ -283,6 +307,26 @@ loadProfile(userId?: string): void {
               commentsCount: Math.max((p.commentsCount ?? 1) - 1, 0)
             }
           : p
+      )
+    );
+  }
+
+  setPostSavedState(postId: string, isSaved: boolean): void {
+    this._posts.update(posts =>
+      posts.map(post =>
+        post._id === postId
+          ? { ...post, isSaved }
+          : post
+      )
+    );
+  }
+
+  setPostLikeState(postId: string, isLiked: boolean, likesCount: number): void {
+    this._posts.update(posts =>
+      posts.map(post =>
+        post._id === postId
+          ? { ...post, isLiked, likesCount }
+          : post
       )
     );
   }

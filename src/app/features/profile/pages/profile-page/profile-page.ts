@@ -5,8 +5,7 @@ import {
   inject,
   signal,
   computed,
-  effect,
-  DestroyRef
+  effect
 } from '@angular/core';
 
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -49,6 +48,7 @@ export class ProfilePageComponent implements OnDestroy {
 
   profile = this.profileService.profile;
   posts = this.profileService.posts;
+  profileLoading = this.profileService.profileLoading;
 
   /* -------------------- TAB STATE -------------------- */
 
@@ -125,41 +125,108 @@ constructor() {
   /* -------------------- EVENTS -------------------- */
 
   onToggleLike(post: Post): void {
-    this.profileService.toggleLike(post);
+    if (!post?._id) return;
+
+    const postId = post._id;
+    const previousLiked = !!post.isLiked;
+    const previousLikes = post.likesCount ?? 0;
+    const optimisticLiked = !previousLiked;
+    const optimisticLikes = this.computeLikesCount(
+      previousLikes,
+      previousLiked,
+      optimisticLiked
+    );
+
+    this.profileService.setPostLikeState(postId, optimisticLiked, optimisticLikes);
+    this.savedPosts.update(list =>
+      list.map(p =>
+        p._id === postId
+          ? { ...p, isLiked: optimisticLiked, likesCount: optimisticLikes }
+          : p
+      )
+    );
+
+    this.postService.toggleLike(postId).subscribe({
+      next: (res) => {
+        const backendLiked = !!res?.data?.liked;
+        const finalLikes = this.computeLikesCount(
+          previousLikes,
+          previousLiked,
+          backendLiked
+        );
+
+        this.profileService.setPostLikeState(postId, backendLiked, finalLikes);
+        this.savedPosts.update(list =>
+          list.map(p =>
+            p._id === postId
+              ? { ...p, isLiked: backendLiked, likesCount: finalLikes }
+              : p
+          )
+        );
+      },
+      error: () => {
+        this.profileService.setPostLikeState(postId, previousLiked, previousLikes);
+        this.savedPosts.update(list =>
+          list.map(p =>
+            p._id === postId
+              ? { ...p, isLiked: previousLiked, likesCount: previousLikes }
+              : p
+          )
+        );
+      }
+    });
   }
 
   onToggleSave(post: Post): void {
+    if (!post?._id) return;
+    const isOwnPost = post.userId === this.authService.getUserId();
+    if (isOwnPost && !post.isSaved) return;
 
     const previous = post.isSaved;
+    const optimistic = !previous;
+
+    this.profileService.setPostSavedState(post._id, optimistic);
 
     // Optimistic update
     this.savedPosts.update(list =>
       list.map(p =>
         p._id === post._id
-          ? { ...p, isSaved: !previous }
+          ? { ...p, isSaved: optimistic }
           : p
       )
     );
 
-    this.postService.toggleSave(post._id).subscribe({
+    this.postService.setSavedState(post._id, optimistic).subscribe({
       next: (res) => {
-        const updated = res.data.isSaved;
+        const backendState =
+          res?.data?.isSaved ??
+          res?.data?.saved ??
+          (res as any)?.isSaved ??
+          (res as any)?.saved;
+
+        const updated = typeof backendState === 'boolean'
+          ? backendState
+          : optimistic;
+
+        const finalState = updated;
+        this.profileService.setPostSavedState(post._id, finalState);
 
         this.savedPosts.update(list =>
           list.map(p =>
             p._id === post._id
-              ? { ...p, isSaved: updated }
+              ? { ...p, isSaved: finalState }
               : p
           )
         );
 
-        if (!updated && this.activeTab() === 'saved') {
+        if (!finalState && this.activeTab() === 'saved') {
           this.savedPosts.update(list =>
             list.filter(p => p._id !== post._id)
           );
         }
       },
       error: () => {
+        this.profileService.setPostSavedState(post._id, previous);
         // rollback
         this.savedPosts.update(list =>
           list.map(p =>
@@ -204,5 +271,16 @@ get isOwnProfile(): boolean {
   closeEditModal(): void {
     this.selectedEditPost = null;
     this.showEditModal = false;
+  }
+
+  private computeLikesCount(
+    likesCount: number,
+    fromLiked: boolean,
+    toLiked: boolean
+  ): number {
+    if (fromLiked === toLiked) return likesCount;
+    return toLiked
+      ? likesCount + 1
+      : Math.max(likesCount - 1, 0);
   }
 }

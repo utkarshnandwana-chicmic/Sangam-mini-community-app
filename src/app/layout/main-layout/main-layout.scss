@@ -1,52 +1,62 @@
-.layout-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #ffffff !important;
-}
-
-/* Sidebar Host Container */
-.sidebar {
-  width: 244px;
-  flex-shrink: 0;
-  transition: width 0.3s ease;
-
-  @media (max-width: 1260px) {
-    width: 72px;
-  }
-}
-
-/* Scrollable Content Area */
-.content {
-  flex-grow: 1;
+.global-layout {
   height: 100vh;
-  overflow-y: auto; // Content scrolls here
+  background: #fff;
+}
+
+.main-sidebar {
+  width: 244px;
+  border-right: 1px solid #dbdbdb;
+  background: #fff;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-sidebar .mat-drawer-inner-container {
+  overflow: hidden !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.main-sidebar::-webkit-scrollbar,
+.main-sidebar .mat-drawer-inner-container::-webkit-scrollbar {
+  display: none;
+}
+
+.main-content-area {
+  height: 100vh;
+  overflow-y: auto;
   overflow-x: hidden;
-  padding: 0;
-  display: flex;
-  justify-content: center; // Centers the feed
+  background: #fff;
 }
 
-/* Instagram-style Feed Container */
-.router-container {
+.feed-container {
   width: 100%;
-  max-width: 935px; // Matches Instagram profile/feed width
-  padding: 30px 20px;
+  max-width: 935px;
   margin: 0 auto;
+  padding: 24px 20px;
+  box-sizing: border-box;
 }
 
-/* Global Scrollbar Style for the Content Area */
-.content::-webkit-scrollbar {
+.main-content-area::-webkit-scrollbar {
   width: 8px;
 }
 
-.content::-webkit-scrollbar-track {
+.main-content-area::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.content::-webkit-scrollbar-thumb {
+.main-content-area::-webkit-scrollbar-thumb {
   background: #dbdbdb;
   border-radius: 10px;
+
   &:hover {
     background: #c7c7c7;
+  }
+}
+
+@media (max-width: 1260px) {
+  .main-sidebar {
+    width: 72px;
   }
 }

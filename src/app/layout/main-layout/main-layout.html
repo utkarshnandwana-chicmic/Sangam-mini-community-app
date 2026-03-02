@@ -1,7 +1,7 @@
 <mat-sidenav-container class="global-layout">
-  
+
   <mat-sidenav mode="side" opened class="main-sidebar">
-    <app-sidebar (createPost)="openCreatePost()"></app-sidebar>
+    <app-sidebar></app-sidebar>
   </mat-sidenav>
 
   <mat-sidenav-content class="main-content-area">
@@ -13,9 +13,3 @@
   </mat-sidenav-content>
 
 </mat-sidenav-container>
-
-<app-add-post-modal
-  *ngIf="isCreatePostOpen"
-  (close)="closeCreatePost()"
-  (postCreated)="closeCreatePost()">
-</app-add-post-modal>

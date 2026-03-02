@@ -16,9 +16,12 @@
     <div *ngIf="searchControl.value.length >= 1">
       <div *ngIf="loading()" class="loading-state">Searching...</div>
       
-      <div *ngFor="let user of users()" (click)="selectUser(user)" class="search-item">
+      <div *ngFor="let user of users(); trackBy: trackByUserId" (click)="selectUser(user)" class="search-item">
         <div class="avatar-container">
-          <img [src]="user.profilePicture | imageUrl" class="user-avatar" />
+          <img
+            [src]="user.profilePicture ? (user.profilePicture | imageUrl) : defaultAvatarUrl"
+            class="user-avatar"
+            (error)="onUserAvatarError($event)" />
         </div>
         <div class="user-info">
           <span class="username">{{ user.userName }}</span>
@@ -30,10 +33,10 @@
     <div *ngIf="!searchControl.value" class="recent-section">
       <div class="recent-header">
         <span class="title">Recent</span>
-        <button class="clear-all" *ngIf="searches().length > 0">Clear all</button>
+        <button class="clear-all" *ngIf="searches().length > 0" (click)="clearRecent()">Clear all</button>
       </div>
 
-      <div *ngFor="let search of searches()" class="search-item">
+      <div *ngFor="let search of searches(); trackBy: trackBySearchId" class="search-item">
         <div class="search-history-icon">
           <svg fill="currentColor" height="20" viewBox="0 0 24 24" width="20"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
         </div>

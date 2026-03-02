@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatListModule } from '@angular/material/list';
 import { RouterModule, Router } from '@angular/router';
 import { MatDividerModule } from '@angular/material/divider';
@@ -14,19 +14,28 @@ import { AuthService } from '../../core/services/auth';
 })
 export class Sidebar {
 
-  @Output() createPost = new EventEmitter<void>(); // 👈 NEW
-
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
-onLogout(): void {
-  this.authService.logout().subscribe();
-  this.router.navigateByUrl('/login', { replaceUrl: true });
-}
+  onLogout(): void {
+    this.authService.logout().subscribe();
+    this.router.navigateByUrl('/login', { replaceUrl: true });
+  }
 
-  onCreatePost() {    
-    this.createPost.emit(); 
+  onCreatePost(): void {
+    this.router.navigateByUrl('/posts/create');
+  }
+
+  isProfileTabActive(): boolean {
+    const currentPath = this.router.url.split('?')[0].split('#')[0];
+    const ownUserId = this.authService.getUserId();
+
+    if (currentPath === '/profile' || currentPath === '/profile/edit') {
+      return true;
+    }
+
+    return !!ownUserId && currentPath === `/profile/${ownUserId}`;
   }
 }
