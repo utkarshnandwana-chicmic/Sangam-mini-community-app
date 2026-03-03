@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, take } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
@@ -24,6 +24,7 @@ export class CommentService {
   private _comments = signal<Comment[]>([]);
   private _loading = signal<boolean>(false);
   private activePostId: string | null = null;
+  private currentUserCache: Comment['user'] | null = null;
 
   readonly comments = this._comments.asReadonly();
   readonly loading = this._loading.asReadonly();
@@ -110,7 +111,7 @@ export class CommentService {
           const currentUser = this.profileService.currentProfile;
           const currentUserId = this.authService.getUserId();
           const backendUser = res?.data?.user;
-          const fallbackUser =
+          const profileUserFallback =
             currentUserId &&
             currentUser &&
             currentUser._id === currentUserId
@@ -122,12 +123,68 @@ export class CommentService {
                 }
               : undefined;
 
+          const cachedFallback =
+            this.currentUserCache && currentUserId && this.currentUserCache._id === currentUserId
+              ? this.currentUserCache
+              : undefined;
+
+          const optimisticFallback =
+            currentUserId
+              ? {
+                  _id: currentUserId,
+                  userName: 'you',
+                  name: 'You',
+                  profilePicture: undefined
+                }
+              : undefined;
+
+          const fallbackUser = backendUser || profileUserFallback || cachedFallback || optimisticFallback;
+
+          if (profileUserFallback) {
+            this.currentUserCache = profileUserFallback;
+          }
+
           const newComment: Comment = {
             ...res.data,
-            user: backendUser || fallbackUser
+            user: fallbackUser
           };
 
           this._comments.update(list => [...list, newComment]);
+
+          // If we only had a temporary fallback, hydrate real user details once and patch.
+          if (!backendUser && !profileUserFallback && currentUserId) {
+            this.api
+              .get<ApiResponse<{ items: Array<{ _id: string; userName: string; name: string; profilePicture?: string }> }>>(
+                API_ENDPOINTS.USER.GET_ALL,
+                { _id: currentUserId }
+              )
+              .pipe(take(1))
+              .subscribe({
+                next: (userRes) => {
+                  const item = userRes?.data?.items?.[0];
+                  if (!item?._id) return;
+
+                  const hydratedUser = {
+                    _id: String(item._id),
+                    userName: String(item.userName ?? 'you'),
+                    name: String(item.name ?? 'You'),
+                    profilePicture: item.profilePicture
+                  };
+
+                  this.currentUserCache = hydratedUser;
+                  this._comments.update(list =>
+                    list.map(comment =>
+                      comment._id === newComment._id
+                        ? { ...comment, user: hydratedUser }
+                        : comment
+                    )
+                  );
+                },
+                error: () => {
+                  // Keep optimistic fallback rendering.
+                }
+              });
+          }
         }
       });
   }

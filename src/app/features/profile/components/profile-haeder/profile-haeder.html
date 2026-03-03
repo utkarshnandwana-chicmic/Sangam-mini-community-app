@@ -19,19 +19,19 @@
 
       <ng-template #strangerButtons>
         <div class="button-group">
-          <button class="btn btn-primary">Follow</button>
-          <button class="btn btn-secondary">Message</button>
+          <button
+            class="btn"
+            [class.btn-secondary]="isFollowingState"
+            [class.btn-primary]="!isFollowingState"
+            [disabled]="followActionLoading() || !canTriggerFollow"
+            (click)="onFollow()">
+            {{ followButtonLabel }}
+          </button>
+          <button *ngIf="showMessageButton" class="btn btn-secondary">Message</button>
         </div>
       </ng-template>
     </div>
 
-    <div class="wallet-pill left-align" >
-      <div class="wallet-icon">💰</div>
-      <div class="wallet-details">
-        <span class="label">Balance</span>
-        <span class="value">{{ profile.walletBalance | currency:(profile.subscriptionPlan?.currency || 'USD') }}</span>
-      </div>
-    </div>
   </div>
 
   <div class="info-col">

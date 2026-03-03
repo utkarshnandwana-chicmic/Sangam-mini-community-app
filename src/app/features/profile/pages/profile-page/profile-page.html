@@ -16,7 +16,10 @@
   class="stats-section"
   [postsCount]="profile.postsCount"
   [followerCount]="profile.followerCount"
-  [followingCount]="profile.followingCount">
+  [followingCount]="profile.followingCount"
+  [connectionsClickable]="canViewConnections"
+  (openFollowers)="openFollowersModal()"
+  (openFollowing)="openFollowingModal()">
 </app-profile-stats>
 
       <!-- GRID SECTION -->
@@ -44,11 +47,22 @@
 
         <!-- POSTS GRID -->
         <app-profile-posts-grid
-          *ngIf="activeTab() === 'posts'"
+          *ngIf="activeTab() === 'posts' && canViewPrivateContent"
           [posts]="posts()"
           (toggleLike)="onToggleLike($event)"
           (viewPost)="onViewPost($event)">
         </app-profile-posts-grid>
+
+        <div
+          *ngIf="activeTab() === 'posts' && !canViewPrivateContent"
+          class="private-account-state">
+          <button class="lock-pill" type="button" disabled>
+            🔒 Private Account
+          </button>
+          <p class="private-account-message">
+            This account is private. Follow this user and wait for acceptance to view posts.
+          </p>
+        </div>
 
         <!-- SAVED GRID -->
         <app-profile-posts-grid
@@ -86,6 +100,72 @@
       [editPost]="selectedEditPost"
       (close)="closeEditModal()">
     </app-add-post-modal>
+
+    <div
+      *ngIf="showFollowListModal()"
+      class="follow-modal-backdrop"
+      (click)="closeFollowListModal()">
+      <div class="follow-modal" (click)="$event.stopPropagation()">
+        <div class="follow-modal-header">
+          <div class="follow-tabs">
+            <button
+              class="follow-tab"
+              [class.active]="activeFollowListTab() === 'followers'"
+              (click)="setFollowListTab('followers')">
+              Followers
+            </button>
+            <button
+              class="follow-tab"
+              [class.active]="activeFollowListTab() === 'following'"
+              (click)="setFollowListTab('following')">
+              Following
+            </button>
+          </div>
+          <button class="modal-close" (click)="closeFollowListModal()">×</button>
+        </div>
+
+        <div class="follow-modal-content">
+          <div class="follow-empty" *ngIf="followListLoading()">
+            Loading...
+          </div>
+
+          <div class="follow-empty" *ngIf="!followListLoading() && !followUsers().length">
+            No {{ activeFollowListTab() }} found.
+          </div>
+
+          <div
+            class="follow-user-row"
+            *ngFor="let user of followUsers(); trackBy: trackByFollowUserId"
+            (click)="navigateToFollowUser(user._id)">
+            <img
+              class="follow-avatar"
+              [src]="user.profilePicture ? (user.profilePicture | imageUrl) : '/default-avatar.svg'"
+              alt="User avatar" />
+            <div class="follow-meta">
+              <span class="follow-username">{{ user.userName || user.name }}</span>
+              <span class="follow-name" *ngIf="user.name">{{ user.name }}</span>
+            </div>
+            <button
+              *ngIf="shouldShowRemoveFollowerButton(user)"
+              type="button"
+              class="list-follow-btn following"
+              [disabled]="isFollowListActionLoading(user._id)"
+              (click)="onRemoveFollowerFromList($event, user)">
+              Remove
+            </button>
+            <button
+              *ngIf="!shouldShowRemoveFollowerButton(user) && user._id !== loggedInUserId"
+              type="button"
+              class="list-follow-btn"
+              [class.following]="user.isFollowing || user.isRequestedFollowing"
+              [disabled]="isFollowListActionLoading(user._id)"
+              (click)="onToggleFollowFromList($event, user)">
+              {{ getFollowListButtonLabel(user) }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main>
 

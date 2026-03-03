@@ -66,7 +66,7 @@ export class ProfileService {
   // LOAD PROFILE + POSTS
   // =========================
 
-loadProfile(userId?: string): void {
+  loadProfile(userId?: string): void {
 
   const finalUserId = userId || this.authService.getUserId();
   if (!finalUserId) return;
@@ -86,7 +86,8 @@ loadProfile(userId?: string): void {
       next: (res) => {
         if (requestId !== this.activeProfileRequestId) return;
 
-        const user = res.data.items?.[0];
+        const rawUser = res.data.items?.[0];
+        const user = rawUser ? this.normalizeProfileRelationshipFlags(rawUser) : null;
         if (!user) {
           this._profileLoading.set(false);
           return;
@@ -96,6 +97,17 @@ loadProfile(userId?: string): void {
         // It should already be filePath stored in DB
 
         this._profile.set(user);
+
+        const ownUserId = this.authService.getUserId();
+        const canLoadPosts =
+          !user.privateAccount ||
+          user._id === ownUserId ||
+          !!user.isFollowing;
+
+        if (!canLoadPosts) {
+          this._profileLoading.set(false);
+          return;
+        }
 
         this.loadUserPosts(finalUserId)
           .pipe(finalize(() => {
@@ -337,5 +349,33 @@ loadProfile(userId?: string): void {
 
   get currentProfile(): ProfileUser | null {
     return this._profile();
+  }
+
+  setCurrentProfile(profile: ProfileUser): void {
+    this._profile.set(this.normalizeProfileRelationshipFlags(profile));
+  }
+
+  private normalizeProfileRelationshipFlags(user: ProfileUser): ProfileUser {
+    const userAny = user as any;
+    const following = userAny?.following;
+    const hasFollowingRelation = !!following?._id;
+    const isRequestedFromRelation = !!following?.requested;
+
+    const explicitIsRequested = userAny?.isRequestedFollowing;
+    const explicitIsFollowing = userAny?.isFollowing;
+
+    const isRequestedFollowing = typeof explicitIsRequested === 'boolean'
+      ? explicitIsRequested
+      : isRequestedFromRelation;
+
+    const isFollowing = typeof explicitIsFollowing === 'boolean'
+      ? explicitIsFollowing
+      : (hasFollowingRelation && !isRequestedFromRelation);
+
+    return {
+      ...user,
+      isRequestedFollowing,
+      isFollowing
+    };
   }
 }

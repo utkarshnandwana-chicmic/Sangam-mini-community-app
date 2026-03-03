@@ -1,0 +1,88 @@
+<section class="notifications-page">
+  <header class="page-header">
+    <h1>Notifications</h1>
+  </header>
+
+  <section class="requests-card">
+    <div class="requests-header">
+      <h2>Requests</h2>
+      <span class="count">{{ requests().length }}</span>
+    </div>
+
+    <div class="state" *ngIf="loading()">Loading requests...</div>
+    <div class="state" *ngIf="!loading() && !requests().length">No pending requests.</div>
+
+    <div
+      class="request-row"
+      *ngFor="let item of requests(); trackBy: trackByNotificationId"
+      (click)="goToSender(item)">
+      <img
+        class="avatar"
+        [src]="item.sender?.profilePicture ? (item.sender?.profilePicture | imageUrl) : '/default-avatar.svg'"
+        alt="Sender avatar" />
+
+      <div class="meta">
+        <span class="title">{{ item.sender?.userName || item.title || 'Follow Request' }}</span>
+        <span class="body">{{ item.body || 'Requested to follow you.' }}</span>
+      </div>
+
+      <div class="actions">
+        <button
+          class="btn btn-secondary"
+          [disabled]="isActionLoading(item._id)"
+          (click)="onReject($event, item)">
+          Reject
+        </button>
+        <button
+          class="btn btn-primary"
+          [disabled]="isActionLoading(item._id)"
+          (click)="onAccept($event, item)">
+          Accept
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="feed-card">
+    <div class="requests-header">
+      <h2>All Notifications</h2>
+      <span class="count">{{ allFeedNotifications.length }}</span>
+    </div>
+
+    <div class="state" *ngIf="notificationsLoading()">Loading notifications...</div>
+    <div class="state" *ngIf="!notificationsLoading() && !allFeedNotifications.length">No notifications yet.</div>
+
+    <div
+      class="request-row"
+      *ngFor="let item of allFeedNotifications; trackBy: trackByNotificationId"
+      (click)="goToSender(item)">
+      <div class="type-icon">{{ notificationIcon(item.type) }}</div>
+
+      <img
+        class="avatar"
+        [src]="item.sender?.profilePicture ? (item.sender?.profilePicture | imageUrl) : '/default-avatar.svg'"
+        alt="Sender avatar" />
+
+      <div class="meta">
+        <span class="title">{{ item.title || notificationTypeLabel(item.type) }}</span>
+        <span class="body">{{ item.body || 'You have a new notification.' }}</span>
+      </div>
+
+      <div class="right-meta">
+        <span class="type-chip">{{ notificationTypeLabel(item.type) }}</span>
+        <span class="time" *ngIf="item.createdAt">{{ item.createdAt | date:'MMM d, h:mm a' }}</span>
+      </div>
+
+      <div class="actions" *ngIf="canShowFollowButton(item)">
+        <button
+          class="btn"
+          [class.btn-primary]="followButtonLabel(item) === 'Follow'"
+          [class.btn-secondary]="followButtonLabel(item) !== 'Follow'"
+          [disabled]="isSenderFollowActionLoading(item._id)"
+          (click)="onToggleFollowFromNotification($event, item)">
+          {{ followButtonLabel(item) }}
+        </button>
+      </div>
+    </div>
+  </section>
+</section>

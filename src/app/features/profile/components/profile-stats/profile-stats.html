@@ -3,11 +3,19 @@
     <span class="count">{{ postsCount }}</span>
     <span class="label">posts</span>
   </li>
-  <li class="stat-item">
+  <li
+    class="stat-item"
+    [class.clickable]="connectionsClickable"
+    [class.disabled]="!connectionsClickable"
+    (click)="onFollowersClick()">
     <span class="count">{{ followerCount | number }}</span>
     <span class="label">followers</span>
   </li>
-  <li class="stat-item">
+  <li
+    class="stat-item"
+    [class.clickable]="connectionsClickable"
+    [class.disabled]="!connectionsClickable"
+    (click)="onFollowingClick()">
     <span class="count">{{ followingCount | number }}</span>
     <span class="label">following</span>
   </li>

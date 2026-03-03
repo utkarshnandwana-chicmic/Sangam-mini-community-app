@@ -1,18 +1,28 @@
 .modal-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 244px;
   background: rgba(0, 0, 0, 0.7);
   z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+@media (max-width: 1260px) {
+  .modal-backdrop {
+    left: 72px;
+  }
 }
 
 .modal-container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 95%;
+  position: relative;
+  width: min(1050px, 100%);
   max-width: 1050px;
-  height: 90vh;
+  height: min(90vh, 900px);
   background: #fff;
   display: flex;
   border-radius: 4px;

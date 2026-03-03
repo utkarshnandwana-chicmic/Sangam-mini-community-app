@@ -10,11 +10,13 @@ import {
 
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { ProfileService } from '../../services/profile';
 import { PostService } from '../../services/post';
 import { Post } from '../../models/post.model';
+import { FollowListUser, FollowService } from '../../services/follow';
 
 import { ProfileHeaderComponent } from '../../components/profile-haeder/profile-haeder';
 import { ProfileStatsComponent } from '../../components/profile-stats/profile-stats';
@@ -22,6 +24,7 @@ import { ProfilePostsGridComponent } from '../../components/posts-grid/posts-gri
 import { PostModalComponent } from '../../components/post-modal/post-modal';
 import { AddPostModalComponent } from '../add-post-modal/add-post-modal';
 import { AuthService } from '../../../../core/services/auth';
+import { ImageUrlPipe } from '../../../../core/pipes/image-url-pipe';
 
 @Component({
   selector: 'app-profile-page',
@@ -32,7 +35,8 @@ import { AuthService } from '../../../../core/services/auth';
     ProfileStatsComponent,
     ProfilePostsGridComponent,
     PostModalComponent,
-    AddPostModalComponent
+    AddPostModalComponent,
+    ImageUrlPipe
   ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.scss',
@@ -41,9 +45,11 @@ import { AuthService } from '../../../../core/services/auth';
 export class ProfilePageComponent implements OnDestroy {
 
   private profileService = inject(ProfileService);
+  private followService = inject(FollowService);
   private postService = inject(PostService);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
+  private router = inject(Router);
   /* -------------------- SERVICE SIGNALS -------------------- */
 
   profile = this.profileService.profile;
@@ -75,6 +81,11 @@ export class ProfilePageComponent implements OnDestroy {
 
   selectedEditPost: Post | null = null;
   showEditModal = false;
+  showFollowListModal = signal(false);
+  activeFollowListTab = signal<'followers' | 'following'>('followers');
+  followUsers = signal<FollowListUser[]>([]);
+  followListLoading = signal(false);
+  followListActionLoading = signal<Record<string, boolean>>({});
 
   /* -------------------- ROUTE REACTIVE LOAD -------------------- */
 
@@ -92,6 +103,8 @@ constructor() {
     this.activeTab.set('posts');
     this.savedPosts.set([]);
     this.selectedPostId.set(null);
+    this.showFollowListModal.set(false);
+    this.followUsers.set([]);
 
     this.profileService.loadProfile(userId ?? undefined);
   });
@@ -99,6 +112,31 @@ constructor() {
 
   ngOnDestroy(): void {
     document.body.style.overflow = 'auto';
+  }
+
+  get canViewPrivateContent(): boolean {
+    const currentProfile = this.profile();
+    if (!currentProfile) return false;
+    if (this.isOwnProfile) return true;
+    if (!currentProfile.privateAccount) return true;
+    return !!currentProfile.isFollowing;
+  }
+
+  get canViewConnections(): boolean {
+    const currentProfile = this.profile();
+    if (!currentProfile) return false;
+
+    const currentUserId = this.authService.getUserId();
+    if (currentUserId && currentProfile._id === currentUserId) {
+      return true;
+    }
+
+    if (!currentProfile.privateAccount) return true;
+    return !!currentProfile.isFollowing;
+  }
+
+  get loggedInUserId(): string | null {
+    return this.authService.getUserId();
   }
 
   /* -------------------- TAB SWITCH -------------------- */
@@ -273,6 +311,149 @@ get isOwnProfile(): boolean {
     this.showEditModal = false;
   }
 
+  openFollowersModal(): void {
+    this.openFollowListModal('followers');
+  }
+
+  openFollowingModal(): void {
+    this.openFollowListModal('following');
+  }
+
+  closeFollowListModal(): void {
+    this.showFollowListModal.set(false);
+    this.followListLoading.set(false);
+    this.followUsers.set([]);
+    this.followListActionLoading.set({});
+    document.body.style.overflow = 'auto';
+  }
+
+  setFollowListTab(tab: 'followers' | 'following'): void {
+    if (this.activeFollowListTab() === tab) return;
+    this.openFollowListModal(tab);
+  }
+
+  navigateToFollowUser(userId: string): void {
+    const normalizedUserId = String(userId ?? '').trim();
+    if (!normalizedUserId) return;
+    this.closeFollowListModal();
+    this.router.navigate(['/profile', normalizedUserId]);
+  }
+
+  trackByFollowUserId(index: number, user: FollowListUser): string {
+    return user._id || String(index);
+  }
+
+  isFollowListActionLoading(userId: string): boolean {
+    return !!this.followListActionLoading()[userId];
+  }
+
+  getFollowListButtonLabel(user: FollowListUser): string {
+    if (user.isFollowing) return 'Following';
+    if (user.isRequestedFollowing) return 'Requested';
+    return 'Follow';
+  }
+
+  onToggleFollowFromList(event: Event, user: FollowListUser): void {
+    event.stopPropagation();
+
+    const userId = String(user?._id ?? '').trim();
+    const ownUserId = this.authService.getUserId();
+    if (!userId || userId === ownUserId || this.isFollowListActionLoading(userId)) return;
+
+    const previous = {
+      isFollowing: !!user.isFollowing,
+      isRequestedFollowing: !!user.isRequestedFollowing
+    };
+    const shouldFollow = !(previous.isFollowing || previous.isRequestedFollowing);
+    const followingCountDelta = shouldFollow ? 1 : -1;
+    const optimisticState = {
+      isFollowing: shouldFollow ? !user.privateAccount : false,
+      isRequestedFollowing: shouldFollow ? !!user.privateAccount : false
+    };
+
+    this.followUsers.update((list) =>
+      list.map((item) =>
+        item._id === userId
+          ? { ...item, ...optimisticState }
+          : item
+      )
+    );
+    this.followListActionLoading.update((state) => ({
+      ...state,
+      [userId]: true
+    }));
+    this.followService.adjustOwnFollowingCount(followingCountDelta);
+
+    this.followService
+      .toggleFollowRelation(userId, previous.isFollowing, previous.isRequestedFollowing)
+      .pipe(finalize(() => {
+        this.followListActionLoading.update((state) => ({
+          ...state,
+          [userId]: false
+        }));
+      }))
+      .subscribe({
+        next: (res) => {
+          const requested = !!res?.data?.requested;
+          this.followUsers.update((list) =>
+            list.map((item) =>
+              item._id === userId
+                ? {
+                    ...item,
+                    isFollowing: shouldFollow ? !requested : false,
+                    isRequestedFollowing: shouldFollow ? requested : false
+                  }
+                : item
+            )
+          );
+        },
+        error: () => {
+          this.followService.adjustOwnFollowingCount(-followingCountDelta);
+          this.followUsers.update((list) =>
+            list.map((item) =>
+              item._id === userId
+                ? { ...item, ...previous }
+                : item
+            )
+          );
+        }
+      });
+  }
+
+  shouldShowRemoveFollowerButton(user: FollowListUser): boolean {
+    return this.isOwnProfile && this.activeFollowListTab() === 'followers' && user._id !== this.loggedInUserId;
+  }
+
+  onRemoveFollowerFromList(event: Event, user: FollowListUser): void {
+    event.stopPropagation();
+
+    const userId = String(user?._id ?? '').trim();
+    if (!userId || this.isFollowListActionLoading(userId)) return;
+
+    const previousList = this.followUsers();
+    this.followUsers.update((list) => list.filter((item) => item._id !== userId));
+    this.followListActionLoading.update((state) => ({
+      ...state,
+      [userId]: true
+    }));
+    this.followService.adjustOwnFollowerCount(-1);
+
+    this.followService
+      .removeFollower(userId)
+      .pipe(finalize(() => {
+        this.followListActionLoading.update((state) => ({
+          ...state,
+          [userId]: false
+        }));
+      }))
+      .subscribe({
+        error: () => {
+          this.followUsers.set(previousList);
+          this.followService.adjustOwnFollowerCount(1);
+        }
+      });
+  }
+
   private computeLikesCount(
     likesCount: number,
     fromLiked: boolean,
@@ -282,5 +463,24 @@ get isOwnProfile(): boolean {
     return toLiked
       ? likesCount + 1
       : Math.max(likesCount - 1, 0);
+  }
+
+  private openFollowListModal(tab: 'followers' | 'following'): void {
+    const currentProfile = this.profile();
+    if (!currentProfile?._id || !this.canViewConnections) return;
+
+    this.showFollowListModal.set(true);
+    this.activeFollowListTab.set(tab);
+    this.followUsers.set([]);
+    this.followListLoading.set(true);
+    document.body.style.overflow = 'hidden';
+
+    this.followService
+      .getFollowUsers(currentProfile._id, tab)
+      .pipe(finalize(() => this.followListLoading.set(false)))
+      .subscribe({
+        next: (users) => this.followUsers.set(users),
+        error: () => this.followUsers.set([])
+      });
   }
 }

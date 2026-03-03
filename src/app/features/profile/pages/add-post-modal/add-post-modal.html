@@ -1,5 +1,4 @@
-<div class="modal-backdrop" (click)="close.emit()"></div>
-
+<div class="modal-backdrop" (click)="close.emit()">
 <div class="modal-container" (click)="$event.stopPropagation()">
   <div class="modal-header">
     <h3>{{ editMode ? 'Edit Post' : 'Create New Post' }}</h3>
@@ -227,4 +226,5 @@
     </div>
 
   </form>
+</div>
 </div>

@@ -35,8 +35,6 @@ export interface ProfileUser {
 
   privateAccount: boolean;
 
-  walletBalance: number;
-
   description?: string;
   link?: string;
   address?: string;
@@ -60,4 +58,3 @@ export interface ProfileUser {
   createdAt?: string;
   updatedAt?: string;
 }
-
