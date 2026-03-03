@@ -166,6 +166,27 @@
     &:hover:not(:disabled) { background: #0056b3; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 86, 179, 0.2); }
     &:disabled { background: #e0e0e0; cursor: not-allowed; color: #a1a1a1; }
   }
+
+  .footer-links {
+    margin-top: 1rem;
+    text-align: center;
+
+    p {
+      font-size: 0.9rem;
+      color: #65676b;
+      margin: 0;
+    }
+
+    .link-text {
+      color: #007bff;
+      font-weight: 700;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
 }
 
 // Global Animations & Loaders
@@ -181,5 +202,4 @@
 @keyframes spin { 100% { transform: rotate(360deg); } }
 @keyframes scaleIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: translateY(0); } }
-
 

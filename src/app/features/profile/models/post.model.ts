@@ -17,7 +17,23 @@ export interface Post {
   _id: string;
   userId: string;
 
+  // API can return post author either nested in `user` or as flat fields.
+  user?: PostUser;
+  userName?: string;
+  name?: string;
+  profilePicture?: string;
+
   caption: string | null;
+  hashtags?: string[];
+  taggedUserIds?: string[];
+  taggedUsers?: PostUser[];
+  address?: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  latitude?: number;
+  longitude?: number;
 
   media: {
     completeUrl?: string;
@@ -46,7 +62,7 @@ export interface Post {
 export interface PostResponse {
   data: {
     items: Post[];
-    isNext: boolean; 
+    isNext: boolean;
   };
 }
 
@@ -64,6 +80,8 @@ export interface CreatePostRequest {
     type: 'Point';
     coordinates: [number, number];
   };
+  latitude?: number;
+  longitude?: number;
   repostId?: string;
   media?: {
     url: string;
@@ -74,5 +92,3 @@ export interface CreatePostRequest {
   audioName?: string;
   scanId?: string;
 }
-
-

@@ -1,12 +1,22 @@
 .overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 244px;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10001;
+  overflow: hidden;
+}
+
+@media (max-width: 1260px) {
+  .overlay {
+    left: 72px;
+  }
 }
 
 .dialog {
@@ -16,6 +26,8 @@
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   animation: fadeIn 0.2s ease;
+  max-height: 90vh;
+  overflow: hidden;
 }
 
 .dialog h3 {

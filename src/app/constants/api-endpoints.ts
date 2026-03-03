@@ -16,6 +16,11 @@ export const API_ENDPOINTS = {
     GET_ALL: '/v1/user',
     UPDATE: '/v1/user/register'
   },
+  FOLLOW: {
+    FOLLOW: '/v1/user/follow',
+    REMOVE_FOLLOWER: '/v1/user/follower',
+    REQUEST_ACTION: '/v1/user/follow/request'
+  },
   POST : {
     GET_ALL: '/v2/post',
     LIKE_TOGGLE: '/v1/post/like',
@@ -39,5 +44,8 @@ export const API_ENDPOINTS = {
 
   SEARCH: {
   BASE: '/v1/search'
+  },
+  NOTIFICATION: {
+    BASE: '/v1/notification'
 }
 };

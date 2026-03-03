@@ -11,8 +11,9 @@
 
   <div class="avatar-preview">
     <img
-      [src]="(previewUrl || (profile.profilePicture | imageUrl))"
+      [src]="(previewUrl || (profile.profilePicture | imageUrl) || '/default-avatar.svg')"
       class="avatar-img"
+      alt="Profile avatar"
     />
   </div>
 

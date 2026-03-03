@@ -20,8 +20,11 @@
       <input 
         type="tel" 
         formControlName="phone" 
+        appNoLeadingSpace
+        inputmode="numeric"
         placeholder="00000 00000" 
         maxlength="10"
+        (input)="onPhoneInput($event)"
         class="phone-input"
       />
     </div>

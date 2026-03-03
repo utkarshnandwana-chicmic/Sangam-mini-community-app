@@ -1,19 +1,17 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { NoLeadingSpaceDirective } from '../../../../core/directives/no-leading-space.directive';
 
 @Component({
   selector: 'app-profile-step',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, NoLeadingSpaceDirective],
   templateUrl: './profile-step.html',
   styleUrl: './profile-step.scss'
 })
 export class ProfileStepComponent {
-  constructor(private cdr: ChangeDetectorRef) {}
-
-
   @Input() profileForm!: FormGroup;
   @Input() isLoading = false;
 

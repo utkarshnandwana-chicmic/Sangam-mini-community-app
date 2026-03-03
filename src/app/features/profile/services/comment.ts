@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, take } from 'rxjs';
 
 import { ApiService } from '../../../core/services/api';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
@@ -8,6 +8,7 @@ import { cleanObject } from '../../../core/utils/object.util';
 import { ApiResponse } from '../../profile/models/api-response.model';
 import { Comment } from '../models/comment.model';
 import { ProfileService } from './profile';
+import { AuthService } from '../../../core/services/auth';
 
 @Injectable({
   providedIn: 'root'
@@ -16,11 +17,14 @@ export class CommentService {
 
   private api = inject(ApiService);
   private profileService = inject(ProfileService);
+  private authService = inject(AuthService);
 
   /* ================= STATE ================= */
 
   private _comments = signal<Comment[]>([]);
   private _loading = signal<boolean>(false);
+  private activePostId: string | null = null;
+  private currentUserCache: Comment['user'] | null = null;
 
   readonly comments = this._comments.asReadonly();
   readonly loading = this._loading.asReadonly();
@@ -28,8 +32,10 @@ export class CommentService {
   /* ================= LOAD ================= */
 
   loadComments(postId: string): void {
+    this.activePostId = postId;
 
     this._loading.set(true);
+    this._comments.set([]);
 
     this.api
       .get<ApiResponse<{ items: Comment[] }>>(
@@ -38,11 +44,12 @@ export class CommentService {
       )
       .subscribe({
         next: (res) => {
+          if (this.activePostId !== postId) return;
 
           const rootComments = res.data.items;
+          this._comments.set(rootComments);
 
           if (!rootComments.length) {
-            this._comments.set([]);
             this._loading.set(false);
             return;
           }
@@ -60,8 +67,9 @@ export class CommentService {
 
           forkJoin(replyRequests).subscribe({
             next: (replyResponses) => {
+              if (this.activePostId !== postId) return;
 
-              let allComments: Comment[] = [...rootComments];
+              let allComments: Comment[] = [...this._comments()];
 
               replyResponses.forEach(response => {
                 allComments = [
@@ -73,10 +81,16 @@ export class CommentService {
               this._comments.set(allComments);
               this._loading.set(false);
             },
-            error: () => this._loading.set(false)
+            error: () => {
+              if (this.activePostId !== postId) return;
+              this._loading.set(false);
+            }
           });
         },
-        error: () => this._loading.set(false)
+        error: () => {
+          if (this.activePostId !== postId) return;
+          this._loading.set(false);
+        }
       });
   }
 
@@ -95,13 +109,82 @@ export class CommentService {
         next: (res) => {
 
           const currentUser = this.profileService.currentProfile;
+          const currentUserId = this.authService.getUserId();
+          const backendUser = res?.data?.user;
+          const profileUserFallback =
+            currentUserId &&
+            currentUser &&
+            currentUser._id === currentUserId
+              ? {
+                  _id: currentUser._id,
+                  userName: currentUser.userName,
+                  name: currentUser.name,
+                  profilePicture: currentUser.profilePicture
+                }
+              : undefined;
+
+          const cachedFallback =
+            this.currentUserCache && currentUserId && this.currentUserCache._id === currentUserId
+              ? this.currentUserCache
+              : undefined;
+
+          const optimisticFallback =
+            currentUserId
+              ? {
+                  _id: currentUserId,
+                  userName: 'you',
+                  name: 'You',
+                  profilePicture: undefined
+                }
+              : undefined;
+
+          const fallbackUser = backendUser || profileUserFallback || cachedFallback || optimisticFallback;
+
+          if (profileUserFallback) {
+            this.currentUserCache = profileUserFallback;
+          }
 
           const newComment: Comment = {
             ...res.data,
-            user: currentUser || undefined
+            user: fallbackUser
           };
 
           this._comments.update(list => [...list, newComment]);
+
+          // If we only had a temporary fallback, hydrate real user details once and patch.
+          if (!backendUser && !profileUserFallback && currentUserId) {
+            this.api
+              .get<ApiResponse<{ items: Array<{ _id: string; userName: string; name: string; profilePicture?: string }> }>>(
+                API_ENDPOINTS.USER.GET_ALL,
+                { _id: currentUserId }
+              )
+              .pipe(take(1))
+              .subscribe({
+                next: (userRes) => {
+                  const item = userRes?.data?.items?.[0];
+                  if (!item?._id) return;
+
+                  const hydratedUser = {
+                    _id: String(item._id),
+                    userName: String(item.userName ?? 'you'),
+                    name: String(item.name ?? 'You'),
+                    profilePicture: item.profilePicture
+                  };
+
+                  this.currentUserCache = hydratedUser;
+                  this._comments.update(list =>
+                    list.map(comment =>
+                      comment._id === newComment._id
+                        ? { ...comment, user: hydratedUser }
+                        : comment
+                    )
+                  );
+                },
+                error: () => {
+                  // Keep optimistic fallback rendering.
+                }
+              });
+          }
         }
       });
   }
@@ -197,6 +280,7 @@ export class CommentService {
   /* ================= CLEAR ================= */
 
   clear(): void {
+    this.activePostId = null;
     this._comments.set([]);
   }
 }

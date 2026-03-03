@@ -17,8 +17,11 @@
       <input 
         type="text" 
         formControlName="otp" 
+        appNoLeadingSpace
+        inputmode="numeric"
         placeholder="000000" 
         maxlength="6"
+        (input)="onOtpInput($event)"
         class="otp-input"
         autocomplete="one-time-code"
       />
@@ -50,7 +53,7 @@
     <div class="loader-white" *ngIf="isLoading"></div>
   </button>
 
-  <!-- <div class="footer-links">
-    <p>Didn't receive the code? <a href="javascript:void(0)" class="link-text">Resend</a></p>
-  </div> -->
+  <div class="footer-links">
+    <p>Already have an account? <a routerLink="/login" class="link-text">Log In</a></p>
+  </div>
 </div>

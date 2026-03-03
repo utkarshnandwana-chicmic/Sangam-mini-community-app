@@ -2,8 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   Input,
-  inject,
-  computed
+  inject
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
@@ -12,6 +11,7 @@ import { Router } from '@angular/router';
 import { ProfileUser } from '../../models/profile.model';
 import { AuthService } from '../../../../core/services/auth';
 import { ImageUrlPipe } from '../../../../core/pipes/image-url-pipe';
+import { FollowService } from '../../services/follow';
 
 @Component({
   selector: 'app-profile-header',
@@ -25,8 +25,28 @@ export class ProfileHeaderComponent {
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private followService = inject(FollowService);
 
   @Input({ required: true }) profile!: ProfileUser;
+  followActionLoading = this.followService.followActionLoading;
+
+  get followButtonLabel(): string {
+    if (this.profile?.isFollowing) return 'Following';
+    if (this.profile?.isRequestedFollowing) return 'Requested';
+    return 'Follow';
+  }
+
+  get isFollowingState(): boolean {
+    return !!this.profile?.isFollowing;
+  }
+
+  get showMessageButton(): boolean {
+    return !!this.profile && (!this.profile.privateAccount || !!this.profile.isFollowing);
+  }
+
+  get canTriggerFollow(): boolean {
+    return !this.isOwnProfile && !!this.profile;
+  }
 
 get isOwnProfile(): boolean {
   const currentUserId = this.authService.getUserId();
@@ -37,4 +57,8 @@ get isOwnProfile(): boolean {
     this.router.navigate(['/profile/edit']);
   }
 
+  onFollow(): void {
+    if (!this.canTriggerFollow || !this.profile?._id) return;
+    this.followService.toggleFollowUser(this.profile._id).subscribe();
+  }
 }

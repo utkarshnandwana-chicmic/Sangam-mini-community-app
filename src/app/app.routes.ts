@@ -48,10 +48,22 @@ export const routes: Routes = [
             .then((m) => m.Chat),
       },
       {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notifications/notifications/notifications')
+            .then((m) => m.NotificationsComponent),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings/settings')
             .then((m) => m.Settings),
+      },
+      {
+        path: 'posts/create',
+        loadComponent: () =>
+          import('./features/profile/pages/add-post-route/add-post-route')
+            .then((m) => m.AddPostRouteComponent),
       },
       {
         path: '',

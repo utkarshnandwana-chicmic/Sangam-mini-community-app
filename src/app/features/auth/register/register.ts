@@ -1,4 +1,9 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject
+} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth';
@@ -8,7 +13,8 @@ import { ProfileStepComponent } from '../registration/profile-step/profile-step'
 import { Router } from '@angular/router';
 import { RegisterRequest } from '../../../core/model/auth.model';
 import { cleanObject } from '../../../core/utils/object.util';
-import { switchMap, map, catchError, of, first, timer } from 'rxjs';
+import { switchMap, map, catchError, of, first, timer, finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-register',
@@ -22,13 +28,15 @@ import { switchMap, map, catchError, of, first, timer } from 'rxjs';
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegisterComponent {
+
+  private destroyRef = inject(DestroyRef);
 
   currentStep = 1;
   isLoading = false;
   errorMessage = '';
-  successMessage = '';
   phoneVerificationToken: string = '';
 
   phoneForm!: FormGroup;
@@ -40,7 +48,6 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef,
     private router: Router,
   ) {
     this.initializeForms();
@@ -83,21 +90,22 @@ export class RegisterComponent {
 
     forms.forEach((form) => {
       Object.keys(form.controls).forEach((controlName) => {
-        form.get(controlName)?.valueChanges.subscribe(() => {
-          const control = form.get(controlName);
+        form.get(controlName)?.valueChanges
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe(() => {
+            const control = form.get(controlName);
 
-          if (control?.errors?.['apiError']) {
-            delete control.errors['apiError'];
-            control.setErrors(Object.keys(control.errors).length ? control.errors : null);
-          }
-        });
+            if (control?.errors?.['apiError']) {
+              delete control.errors['apiError'];
+              control.setErrors(Object.keys(control.errors).length ? control.errors : null);
+            }
+          });
       });
     });
   }
 
   clearAlerts() {
     this.errorMessage = '';
-    this.successMessage = '';
   }
 
   // ---------------- FORM INIT ----------------
@@ -105,11 +113,11 @@ export class RegisterComponent {
   initializeForms() {
     this.phoneForm = this.fb.group({
       countryCode: ['+91', Validators.required],
-      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{6,15}$/)]],
+      phone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
     });
 
     this.otpForm = this.fb.group({
-      otp: ['', [Validators.required]],
+      otp: ['', [Validators.required, Validators.pattern(/^[0-9]{6}$/)]],
     });
 
     this.profileForm = this.fb.group({
@@ -145,60 +153,66 @@ export class RegisterComponent {
   // ---------------- PHONE STEP ----------------
 
   sendPhone() {
+    if (this.isLoading) return;
     if (this.phoneForm.invalid) return;
     this.clearAlerts();
     this.isLoading = true;
 
     const { phone, countryCode } = this.phoneForm.value;
 
-    this.authService.registerPhone(phone, countryCode).subscribe({
-      next: (res) => {
-        if (res?.data?.phoneVerificationToken) {
-          this.phoneVerificationToken = res.data.phoneVerificationToken;
-          this.successMessage = res.message || 'OTP sent successfully';
-          this.currentStep = 2;
-          this.cdr.detectChanges();
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.isLoading = false;
-        const message = err?.error?.message || 'Failed to send OTP';
-        this.phoneForm.get('phone')?.setErrors({ apiError: message });
-      },
-    });
+    this.authService.registerPhone(phone, countryCode)
+      .pipe(
+        finalize(() => this.isLoading = false),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (res) => {
+          if (res?.data?.phoneVerificationToken) {
+            this.phoneVerificationToken = res.data.phoneVerificationToken;
+            this.currentStep = 2;
+          }
+        },
+        error: (err) => {
+          const message = err?.error?.message || 'Failed to send OTP';
+          this.phoneForm.get('phone')?.setErrors({ apiError: message });
+        },
+      });
   }
 
   // ---------------- OTP STEP ----------------
 
   verifyOtp() {
+    if (this.isLoading) return;
     if (this.otpForm.invalid) return;
     this.clearAlerts();
     this.isLoading = true;
 
-    this.authService.verifyOTP(this.phoneVerificationToken, this.otpForm.value.otp).subscribe({
-      next: (res: any) => {
-        const jwtToken = res?.data?.token || res?.token;
+    this.authService.verifyOTP(this.phoneVerificationToken, this.otpForm.value.otp)
+      .pipe(
+        finalize(() => this.isLoading = false),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: (res: any) => {
+          const jwtToken = res?.data?.token || res?.token;
 
-        if (jwtToken) {
-          localStorage.setItem('tempRegisterToken', jwtToken);
-        }
+          if (jwtToken) {
+            localStorage.setItem('tempRegisterToken', jwtToken);
+          }
 
-        this.currentStep = 3;
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        const message = err?.error?.message || 'Invalid OTP';
-        this.otpForm.get('otp')?.setErrors({ apiError: message });
-      },
-    });
+          this.currentStep = 3;
+        },
+        error: (err) => {
+          const message = err?.error?.message || 'Invalid OTP';
+          this.otpForm.get('otp')?.setErrors({ apiError: message });
+        },
+      });
   }
 
   // ---------------- COMPLETE REGISTRATION ----------------
 
 completeRegistration() {
+  if (this.isLoading) return;
   if (this.profileForm.invalid) return;
 
   this.isLoading = true;
@@ -233,21 +247,24 @@ completeRegistration() {
     ...optionalFields
   };
 
-  this.authService.completeRegister(finalPayload).subscribe({
-    next: () => {
-      this.isLoading = false;
-      this.currentStep = 4;
+  this.authService.completeRegister(finalPayload)
+    .pipe(
+      finalize(() => this.isLoading = false),
+      takeUntilDestroyed(this.destroyRef)
+    )
+    .subscribe({
+      next: () => {
+        this.currentStep = 4;
 
-      setTimeout(() => {
-        this.router.navigate(['/home']);
-      }, 1500);
-    },
-    error: (err) => {
-      this.isLoading = false;
-      const message = err?.error?.message || "Registration failed";
-      this.profileForm.setErrors({ apiError: message });
-    }
-  });
+        setTimeout(() => {
+          this.router.navigate(['/home']);
+        }, 1500);
+      },
+      error: (err) => {
+        const message = err?.error?.message || "Registration failed";
+        this.profileForm.setErrors({ apiError: message });
+      }
+    });
 }
 
 
