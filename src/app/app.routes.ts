@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layout/main-layout/main-layout';
 import { authGuard } from './core/guards/auth-guard-guard';
+import { NotFound } from './shared/pages/not-found/not-found';
+import { Unauthorized } from './shared/pages/unauthorized/unauthorized';
 
 export const routes: Routes = [
   {
@@ -73,7 +75,11 @@ export const routes: Routes = [
     ],
   },
   {
+    path: '403',
+    component: Unauthorized
+  },
+  {
     path: '**',
-    redirectTo: '',   // 🔥 redirect to layout root instead of login
+    component: NotFound,   
   },
 ];
