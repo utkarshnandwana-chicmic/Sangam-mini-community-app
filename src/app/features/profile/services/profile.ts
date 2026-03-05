@@ -444,6 +444,8 @@ adjustOwnFollowingCount(delta: number): void {
       this.setCurrentProfile(updatedCache);
     }
   }
+
+
 }
 
 updateFollowState(isFollowing: boolean, isRequested: boolean) {
@@ -503,5 +505,11 @@ incrementOwnFollower(delta: number) {
   }
 }
 
+// for clearing cache
+clearCache(): void {
+  this.ownProfileCache = null;
+  this._profile.set(null);
+  this._posts.set([]);
+}
 
 }

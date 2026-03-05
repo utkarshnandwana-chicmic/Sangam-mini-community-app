@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
@@ -49,6 +50,7 @@ export class RegisterComponent {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {
     this.initializeForms();
     this.setupApiErrorCleaner();
@@ -162,19 +164,30 @@ export class RegisterComponent {
 
     this.authService.registerPhone(phone, countryCode)
       .pipe(
-        finalize(() => this.isLoading = false),
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (res) => {
-          if (res?.data?.phoneVerificationToken) {
-            this.phoneVerificationToken = res.data.phoneVerificationToken;
-            this.currentStep = 2;
-          }
+          // Some API versions return different key names for the verification token.
+          const verificationToken =
+            res?.data?.phoneVerificationToken ||
+            res?.data?.phone_verification_token ||
+            res?.phoneVerificationToken ||
+            '';
+
+          this.phoneVerificationToken = verificationToken;
+          this.otpForm.reset();
+          this.currentStep = 2;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           const message = err?.error?.message || 'Failed to send OTP';
           this.phoneForm.get('phone')?.setErrors({ apiError: message });
+          this.cdr.markForCheck();
         },
       });
   }
@@ -184,12 +197,20 @@ export class RegisterComponent {
   verifyOtp() {
     if (this.isLoading) return;
     if (this.otpForm.invalid) return;
+    if (!this.phoneVerificationToken) {
+      this.otpForm.get('otp')?.setErrors({ apiError: 'Please request OTP again.' });
+      this.cdr.markForCheck();
+      return;
+    }
     this.clearAlerts();
     this.isLoading = true;
 
     this.authService.verifyOTP(this.phoneVerificationToken, this.otpForm.value.otp)
       .pipe(
-        finalize(() => this.isLoading = false),
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
@@ -201,10 +222,12 @@ export class RegisterComponent {
           }
 
           this.currentStep = 3;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           const message = err?.error?.message || 'Invalid OTP';
           this.otpForm.get('otp')?.setErrors({ apiError: message });
+          this.cdr.markForCheck();
         },
       });
   }
@@ -249,12 +272,16 @@ completeRegistration() {
 
   this.authService.completeRegister(finalPayload)
     .pipe(
-      finalize(() => this.isLoading = false),
+      finalize(() => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }),
       takeUntilDestroyed(this.destroyRef)
     )
     .subscribe({
       next: () => {
         this.currentStep = 4;
+        this.cdr.markForCheck();
 
         setTimeout(() => {
           this.router.navigate(['/home']);
@@ -263,6 +290,7 @@ completeRegistration() {
       error: (err) => {
         const message = err?.error?.message || "Registration failed";
         this.profileForm.setErrors({ apiError: message });
+        this.cdr.markForCheck();
       }
     });
 }

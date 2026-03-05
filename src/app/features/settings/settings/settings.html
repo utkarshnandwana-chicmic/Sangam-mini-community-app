@@ -1,1 +1,122 @@
-<h1>Home Works</h1>
+<div class="settings-container">
+
+  <!-- Password & Security Card -->
+  <section class="settings-card">
+    <div class="card-header">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <h2>Password & Security</h2>
+    </div>
+
+    <form (ngSubmit)="changePassword()" class="interactive-form">
+
+      <!-- Current Password -->
+      <div class="input-group">
+        <label>Current Password</label>
+        <div class="input-wrapper">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input
+            type="password"
+            placeholder="Enter current password"
+            [value]="userSettings.oldPassword()"
+            (input)="onOldPasswordChange($event.target.value)"
+            required
+            appNoLeadingSpace
+          />
+        </div>
+      </div>
+
+      <!-- New Password -->
+      <div class="input-group">
+        <label>New Password</label>
+        <div class="input-wrapper">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3y-3.5"/>
+          </svg>
+          <input
+            type="password"
+            placeholder="Create new password"
+            [value]="userSettings.newPassword()"
+            (input)="onNewPasswordChange($event.target.value)"
+            required
+            appNoLeadingSpace
+          />
+        </div>
+
+        <!-- Password Strength Meter -->
+        <div class="strength-meter" *ngIf="userSettings.newPassword()">
+          <div
+            class="bar"
+            [class.weak]="!userSettings.isNewPasswordValid()"
+            [class.strong]="userSettings.isNewPasswordValid()"
+          ></div>
+        </div>
+
+        <small
+          class="hint"
+          [class.error]="!userSettings.isNewPasswordValid() && userSettings.newPassword()"
+        >
+          Minimum 8 characters, include uppercase, number & symbol
+        </small>
+      </div>
+
+      <!-- Confirm New Password -->
+      <div class="input-group">
+        <label>Confirm New Password</label>
+        <div class="input-wrapper">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <input
+            type="password"
+            placeholder="Repeat new password"
+            [value]="userSettings.confirmPassword()"
+            (input)="onConfirmPasswordChange($event.target.value)"
+            required
+            appNoLeadingSpace
+          />
+        </div>
+        <small
+          class="error"
+          *ngIf="!userSettings.passwordsMatch() && userSettings.confirmPassword()"
+        >
+          Passwords do not match
+        </small>
+      </div>
+
+      <!-- Update Password Button -->
+      <button type="submit" class="submit-btn" [disabled]="!userSettings.canSubmit() || userSettings.loading()">
+        <span *ngIf="!userSettings.loading()">Update Password</span>
+        <div class="spinner" *ngIf="userSettings.loading()"></div>
+      </button>
+
+      <!-- Messages -->
+      <div class="message success" *ngIf="userSettings.success()">{{ userSettings.success() }}</div>
+      <div class="message error-box" *ngIf="userSettings.error()">{{ userSettings.error() }}</div>
+    </form>
+  </section>
+
+  <!-- Danger Zone Card -->
+  <section class="settings-card danger-zone">
+    <div class="card-header">
+      <svg class="icon red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <h2>Danger Zone</h2>
+    </div>
+    <div class="danger-content">
+      <p>Once you delete your account, there is no going back. Please be certain.</p>
+      <button class="delete-btn" (click)="deleteAccount()" [disabled]="userSettings.loading()">Delete Account</button>
+    </div>
+  </section>
+
+  <!-- Global Confirmation Dialog -->
+  <app-global-confirm-dialog></app-global-confirm-dialog>
+</div>

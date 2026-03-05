@@ -3,6 +3,7 @@ import { MatListModule } from '@angular/material/list';
 import { RouterModule, Router } from '@angular/router';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../core/services/auth';
+import { ProfileService } from '../../features/profile/services/profile';
 
 @Component({
   selector: 'app-sidebar',
@@ -16,11 +17,13 @@ export class Sidebar {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private profileService: ProfileService
   ) {}
 
   onLogout(): void {
     this.authService.logout().subscribe();
+    this.profileService.clearCache();
     this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 

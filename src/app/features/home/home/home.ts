@@ -8,11 +8,12 @@ import { Post } from '../../profile/models/post.model';
 import { Comment } from '../../profile/models/comment.model';
 import { ImageUrlPipe } from '../../../core/pipes/image-url-pipe';
 import { AuthService } from '../../../core/services/auth';
+import { TimesAgoPipe } from '../../../core/pipes/times-ago-pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageUrlPipe],
+  imports: [CommonModule, FormsModule, ImageUrlPipe, TimesAgoPipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -57,7 +57,7 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings/settings')
-            .then((m) => m.Settings),
+            .then((m) => m.SettingsComponent),
       },
       {
         path: 'posts/create',

@@ -232,7 +232,7 @@
 </div>
       <div class="footer-stats">
         <strong>{{ post.likesCount | number }} likes</strong>
-        <div class="post-date">{{ post.createdAt | date:'MMMM d' }}</div>
+        <div class="post-date">{{ post.createdAt | timesAgo }} </div>
       </div>
       <div class="comment-input-section">
         <input type="text" appNoLeadingSpace [(ngModel)]="newComment" placeholder="Add a comment..." />
