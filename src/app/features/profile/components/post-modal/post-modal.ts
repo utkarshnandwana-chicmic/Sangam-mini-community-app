@@ -32,6 +32,7 @@ import { ConfirmDialogService } from '../../../../core/services/confirm-dialog';
 import { ApiService } from '../../../../core/services/api';
 import { ApiResponse } from '../../models/api-response.model';
 import { API_ENDPOINTS } from '../../../../constants/api-endpoints';
+import { TimesAgoPipe } from '../../../../core/pipes/times-ago-pipe';
 
 @Component({
   selector: 'app-post-modal',
@@ -40,7 +41,8 @@ import { API_ENDPOINTS } from '../../../../constants/api-endpoints';
     CommonModule,
     FormsModule,
     ImageUrlPipe,
-    NoLeadingSpaceDirective
+    NoLeadingSpaceDirective,
+    TimesAgoPipe
   ],
   templateUrl: './post-modal.html',
   styleUrl: './post-modal.scss',

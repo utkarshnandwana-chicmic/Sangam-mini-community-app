@@ -120,7 +120,7 @@
     </div>
 
     <div class="post-datetime" *ngIf="post.createdAt">
-      {{ post.createdAt | date:'MMM d, h:mm a' }}
+      {{ post.createdAt | timesAgo }}
     </div>
 
     <div class="caption" *ngIf="post.caption">

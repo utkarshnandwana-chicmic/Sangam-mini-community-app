@@ -1,3 +1,4 @@
+
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/v1/user/login',
@@ -14,7 +15,9 @@ export const API_ENDPOINTS = {
   USER: {
     DETAILS: '/v1/user/details',
     GET_ALL: '/v1/user',
-    UPDATE: '/v1/user/register'
+    UPDATE: '/v1/user/register',
+    CHANGE_PASSWORD: '/v1/user/changePassword',
+    DELETE: '/v1/user/deletionRequest'
   },
   FOLLOW: {
     FOLLOW: '/v1/user/follow',

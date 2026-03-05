@@ -27,6 +27,8 @@ export class ProfileService {
   private postService = inject(PostService);
   private authService = inject(AuthService);
 
+  private ownProfileCache: ProfileUser | null = null;
+
   // =========================
   // STATE
   // =========================
@@ -68,62 +70,72 @@ export class ProfileService {
 
   loadProfile(userId?: string): void {
 
-  const finalUserId = userId || this.authService.getUserId();
-  if (!finalUserId) return;
-  const requestId = ++this.activeProfileRequestId;
+    const finalUserId = userId || this.authService.getUserId();
 
-  this._profileLoading.set(true);
-  this._profile.set(null);
-  this._posts.set([]);
-  this._isNext.set(false);
+    if (!finalUserId) return;
 
-  this.api
-    .get<ApiResponse<{ items: ProfileUser[] }>>(
-      API_ENDPOINTS.USER.GET_ALL,
-      { _id: finalUserId }
-    )
-    .subscribe({
-      next: (res) => {
-        if (requestId !== this.activeProfileRequestId) return;
+    if (!userId && this.ownProfileCache) {
+      this._profile.set(this.ownProfileCache);
+      this.loadUserPosts(this.ownProfileCache._id).subscribe();
 
-        const rawUser = res.data.items?.[0];
-        const user = rawUser ? this.normalizeProfileRelationshipFlags(rawUser) : null;
-        if (!user) {
-          this._profileLoading.set(false);
-          return;
+      return;
+    }
+
+    const requestId = ++this.activeProfileRequestId;
+
+    this._profileLoading.set(true);
+    this._profile.set(null);
+    this._posts.set([]);
+    this._isNext.set(false);
+
+    this.api
+      .get<ApiResponse<{ items: ProfileUser[] }>>(
+        API_ENDPOINTS.USER.GET_ALL,
+        { _id: finalUserId }
+      )
+      .subscribe({
+        next: (res) => {
+          if (requestId !== this.activeProfileRequestId) return;
+
+          const rawUser = res.data.items?.[0];
+          const user = rawUser ? this.normalizeProfileRelationshipFlags(rawUser) : null;
+          if (!user) {
+            this._profileLoading.set(false);
+            return;
+          }
+
+          // ✅ DO NOT modify profilePicture
+          // It should already be filePath stored in DB
+
+          this._profile.set(user);
+
+          const ownUserId = this.authService.getUserId();
+          this.updateOwnProfileCache(user);
+          const canLoadPosts =
+            !user.privateAccount ||
+            user._id === ownUserId ||
+            !!user.isFollowing;
+
+          if (!canLoadPosts) {
+            this._profileLoading.set(false);
+            return;
+          }
+
+          this.loadUserPosts(finalUserId)
+            .pipe(finalize(() => {
+              if (requestId === this.activeProfileRequestId) {
+                this._profileLoading.set(false);
+              }
+            }))
+            .subscribe();
+        },
+        error: () => {
+          if (requestId === this.activeProfileRequestId) {
+            this._profileLoading.set(false);
+          }
         }
-
-        // ✅ DO NOT modify profilePicture
-        // It should already be filePath stored in DB
-
-        this._profile.set(user);
-
-        const ownUserId = this.authService.getUserId();
-        const canLoadPosts =
-          !user.privateAccount ||
-          user._id === ownUserId ||
-          !!user.isFollowing;
-
-        if (!canLoadPosts) {
-          this._profileLoading.set(false);
-          return;
-        }
-
-        this.loadUserPosts(finalUserId)
-          .pipe(finalize(() => {
-            if (requestId === this.activeProfileRequestId) {
-              this._profileLoading.set(false);
-            }
-          }))
-          .subscribe();
-      },
-      error: () => {
-        if (requestId === this.activeProfileRequestId) {
-          this._profileLoading.set(false);
-        }
-      }
-    });
-}
+      });
+  }
 
   // =========================
   // LOAD USER POSTS
@@ -173,10 +185,15 @@ export class ProfileService {
           const current = this._profile();
 
           if (current) {
-            this._profile.set({
-              ...current,
-              ...updatedUser
-            });
+          const merged = {
+            ...current,
+            ...updatedUser
+          };
+
+          this._profile.set(merged);
+          this.updateOwnProfileCache(merged)
+            
+
           }
         })
       );
@@ -315,9 +332,9 @@ export class ProfileService {
       posts.map(p =>
         p._id === postId
           ? {
-              ...p,
-              commentsCount: Math.max((p.commentsCount ?? 1) - 1, 0)
-            }
+            ...p,
+            commentsCount: Math.max((p.commentsCount ?? 1) - 1, 0)
+          }
           : p
       )
     );
@@ -352,7 +369,10 @@ export class ProfileService {
   }
 
   setCurrentProfile(profile: ProfileUser): void {
-    this._profile.set(this.normalizeProfileRelationshipFlags(profile));
+   const normalized= this.normalizeProfileRelationshipFlags(profile)
+    this._profile.set(normalized);
+    this.updateOwnProfileCache(normalized)
+    
   }
 
   private normalizeProfileRelationshipFlags(user: ProfileUser): ProfileUser {
@@ -378,4 +398,118 @@ export class ProfileService {
       isFollowing
     };
   }
+
+  // helper function for cache
+  private updateOwnProfileCache(profile: ProfileUser) {
+  const ownUserId = this.authService.getUserId();
+
+  if (profile._id === ownUserId) {
+    this.ownProfileCache = profile;
+  }
+}
+
+// helper for followers update in cache
+adjustFollowerCount(delta: number): void {
+
+  const profile = this._profile();
+  if (!profile) return;
+
+  const updated = {
+    ...profile,
+    followerCount: Math.max((profile.followerCount ?? 0) + delta, 0)
+  };
+
+  this._profile.set(updated);
+  this.updateOwnProfileCache(updated);
+}
+
+// helper for following update in cache
+adjustOwnFollowingCount(delta: number): void {
+  if (!delta) return;
+
+  const ownUserId = this.authService.getUserId();
+  if (!ownUserId) return;
+
+  // Update cache
+  if (this.ownProfileCache) {
+    const updatedCache = {
+      ...this.ownProfileCache,
+      followingCount: Math.max((this.ownProfileCache.followingCount ?? 0) + delta, 0)
+    };
+    this.ownProfileCache = updatedCache;
+
+    // Update signal only if currently viewing own profile
+    const current = this.currentProfile;
+    if (current?._id === ownUserId) {
+      this.setCurrentProfile(updatedCache);
+    }
+  }
+
+
+}
+
+updateFollowState(isFollowing: boolean, isRequested: boolean) {
+
+  const profile = this._profile();
+  if (!profile) return;
+
+  const updated = {
+    ...profile,
+    isFollowing,
+    isRequestedFollowing: isRequested
+  };
+
+  this._profile.set(updated);
+  this.updateOwnProfileCache(updated);
+}
+
+incrementOwnFollowing(delta: number) {
+
+  const ownUserId = this.authService.getUserId();
+
+  if (!ownUserId || !this.ownProfileCache) return;
+
+  const updated = {
+    ...this.ownProfileCache,
+    followingCount: Math.max(
+      (this.ownProfileCache.followingCount ?? 0) + delta,
+      0
+    )
+  };
+
+  this.ownProfileCache = updated;
+
+  if (this._profile()?._id === ownUserId) {
+    this._profile.set(updated);
+  }
+}
+
+incrementOwnFollower(delta: number) {
+  const ownUserId = this.authService.getUserId();
+
+  if (!ownUserId || !this.ownProfileCache) return;
+
+  const updated = {
+    ...this.ownProfileCache,
+    followerCount: Math.max(
+      (this.ownProfileCache.followerCount ?? 0) + delta,
+      0
+    )
+  };
+
+  this.ownProfileCache = updated;
+
+  // Update signal if user is viewing their own profile
+  if (this._profile()?._id === ownUserId) {
+    this._profile.set(updated);
+  }
+}
+
+// for clearing cache
+clearCache(): void {
+  this.ownProfileCache = null;
+  this._profile.set(null);
+  this._posts.set([]);
+}
+
 }

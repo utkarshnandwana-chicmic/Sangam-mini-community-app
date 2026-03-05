@@ -32,7 +32,7 @@
     OTP is required to verify.
   </span>
 
-  <span *ngIf="otpForm.get('otp')?.hasError('minlength')">
+  <span *ngIf="otpForm.get('otp')?.hasError('pattern')">
     OTP must be 6 digits.
   </span>
 
