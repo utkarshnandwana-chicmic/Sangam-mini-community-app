@@ -186,6 +186,28 @@ export class FollowService {
             isRequestedFollowing: actionType === 1 ? requested : false,
             followerCount: nextFollowerCount
           });
+const ownUserId = this.authService.getUserId();
+
+// Update own following cache
+if (ownUserId && ownUserId !== userId) {
+  if (actionType === 1 && !requested) {
+    this.profileService.adjustOwnFollowingCount(1);
+  }
+
+  if (actionType === 0 && wasFollowing) {
+    this.profileService.adjustOwnFollowingCount(-1);
+  }
+}
+
+// Update own follower cache if following yourself (edge case)
+if (ownUserId && ownUserId === userId) {
+  if (actionType === 1 && !requested) {
+    this.profileService.incrementOwnFollower(1);
+  }
+  if (actionType === 0 && wasFollowing) {
+    this.profileService.incrementOwnFollower(-1);
+  }
+}
         }),
         catchError((error) => {
           if (previousProfile) {
