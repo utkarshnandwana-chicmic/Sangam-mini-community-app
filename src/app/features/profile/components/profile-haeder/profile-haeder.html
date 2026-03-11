@@ -27,7 +27,7 @@
             (click)="onFollow()">
             {{ followButtonLabel }}
           </button>
-          <button *ngIf="showMessageButton" class="btn btn-secondary">Message</button>
+          <button *ngIf="showMessageButton" class="btn btn-secondary" (click)="onMessage()">Message</button>
         </div>
       </ng-template>
     </div>

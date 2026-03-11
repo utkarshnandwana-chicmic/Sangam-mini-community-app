@@ -61,4 +61,11 @@ get isOwnProfile(): boolean {
     if (!this.canTriggerFollow || !this.profile?._id) return;
     this.followService.toggleFollowUser(this.profile._id).subscribe();
   }
+
+  onMessage(): void {
+    if (!this.profile?._id || this.isOwnProfile) return;
+    this.router.navigate(['/chat'], {
+      queryParams: { userId: this.profile._id }
+    });
+  }
 }

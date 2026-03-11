@@ -3,12 +3,14 @@ import { catchError, of, tap } from 'rxjs';
 import { ApiService } from './api';
 import { API_ENDPOINTS } from '../../constants/api-endpoints';
 import { RegisterRequest } from '../model/auth.model';
+import { SocketService } from './socket';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private api = inject(ApiService);
+  private socket = inject(SocketService);
   private tokenSignal = signal<string | null>(localStorage.getItem('token'));
   readonly isLoggedInSignal = computed(() => !!this.tokenSignal());
 
@@ -30,12 +32,14 @@ export class AuthService {
         if (token) {
           localStorage.setItem('token', token);
           this.tokenSignal.set(token);
+          this.socket.connect();
         }
       })
     );
   }
 
   logout() {
+    this.socket.disconnect();
     localStorage.removeItem('token');
     this.tokenSignal.set(null);
 
@@ -88,6 +92,7 @@ export class AuthService {
           localStorage.setItem('token', finalToken);
           this.tokenSignal.set(finalToken);
           localStorage.removeItem('tempRegisterToken');
+          this.socket.connect();
         }
       })
     );
@@ -137,8 +142,14 @@ export class AuthService {
     if (!token) return null;
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload?.id ?? null;
+      const payloadSegment = token.split('.')[1];
+      if (!payloadSegment) return null;
+
+      const base64 = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      const payload = JSON.parse(atob(padded));
+
+      return payload?.id ?? payload?._id ?? payload?.userId ?? payload?.sub ?? null;
     } catch {
       return null;
     }

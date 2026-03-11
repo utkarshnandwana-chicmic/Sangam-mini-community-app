@@ -1,0 +1,57 @@
+<div class="chat-page-container">
+  <aside class="sidebar">
+    <app-conversation-list
+      [activeConversationId]="selectedConversation()?._id || null"
+      (conversationSelected)="onSelectConversation($event)"
+      (conversationsLoaded)="onConversationsLoaded($event)"
+      (newChat)="openUserSearch()">
+    </app-conversation-list>
+  </aside>
+
+  <main class="chat-main">
+    <app-chat-window [conversation]="selectedConversation()"></app-chat-window>
+  </main>
+</div>
+
+<div class="new-chat-modal-overlay" *ngIf="showUserSearch()" (click)="closeUserSearch()">
+  <div class="new-chat-modal" (click)="$event.stopPropagation()">
+    <div class="new-chat-header">
+      <h3>New chat</h3>
+      <button type="button" class="close-btn" (click)="closeUserSearch()">x</button>
+    </div>
+
+    <div class="new-chat-search">
+      <input
+        type="text"
+        placeholder="Search users to chat"
+        [value]="newChatQuery"
+        (input)="onNewChatSearchInput($event)" />
+      <button *ngIf="newChatQuery" type="button" class="clear-btn" (click)="clearNewChatSearch()">x</button>
+    </div>
+
+    <div class="new-chat-results">
+      <div class="state" *ngIf="isSearchingUsers()">Searching users...</div>
+      <div class="state" *ngIf="!isSearchingUsers() && newChatQuery.trim().length < 2">
+        Type at least 2 letters.
+      </div>
+      <div class="state" *ngIf="!isSearchingUsers() && newChatQuery.trim().length >= 2 && newChatResults().length === 0">
+        No users found.
+      </div>
+
+      <button
+        type="button"
+        class="user-row"
+        *ngFor="let user of newChatResults()"
+        (click)="startConversation(user)">
+        <img
+          class="avatar"
+          [src]="user?.profilePicture ? (user.profilePicture | imageUrl) : '/default-avatar.svg'"
+          alt="User avatar" />
+        <div class="user-meta">
+          <div class="username">{{ user?.userName || 'user' }}</div>
+          <div class="name">{{ user?.name || '' }}</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>

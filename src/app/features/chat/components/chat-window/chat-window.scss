@@ -1,0 +1,246 @@
+:host {
+  display: block;
+  height: 100%;
+  --ig-blue: #0095f6;
+  --ig-light-gray: #f2f2f2;
+  --ig-border: #efefef;
+  --ig-text-primary: #262626;
+  --ig-text-secondary: #8e8e8e;
+}
+
+.chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+}
+
+.chat-header {
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--ig-border);
+  z-index: 10;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .avatar-container {
+      position: relative;
+      .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+      .status-dot {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 10px;
+        height: 10px;
+        background: #4ade80;
+        border: 2px solid #fff;
+        border-radius: 50%;
+      }
+    }
+
+    .text-info {
+      .username { font-weight: 600; font-size: 15px; color: var(--ig-text-primary); display: block; }
+      .status-text { font-size: 12px; color: var(--ig-text-secondary); 
+        &.is-typing { color: var(--ig-blue); font-weight: 500; }
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    color: var(--ig-text-primary);
+    .icon-btn { 
+      background: none; border: none; cursor: pointer; padding: 8px; border-radius: 50%;
+      &:hover { background: #fafafa; }
+    }
+  }
+}
+.message-list {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .msg-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    position: relative; // Needed for Menu positioning
+
+    &.own {
+      flex-direction: row-reverse;
+      .bubble {
+        background: var(--ig-blue);
+        color: #fff;
+        border-radius: 18px 18px 4px 18px;
+        .msg-time { color: rgba(255, 255, 255, 0.9); }
+      }
+      .msg-menu { right: 40px; } // Position menu to the left of dots
+    }
+
+    &:not(.own) {
+      .bubble {
+        background: var(--ig-light-gray);
+        color: var(--ig-text-primary);
+        border-radius: 18px 18px 18px 4px;
+        .msg-time { color: var(--ig-text-secondary); }
+      }
+      .msg-menu { left: 40px; } // Position menu to the right of dots
+    }
+
+    .msg-actions {
+      position: relative;
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+
+      .action-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--ig-text-secondary);
+        cursor: pointer;
+
+        &:hover {
+          background: #f5f5f5;
+          color: var(--ig-text-primary);
+        }
+      }
+    }
+    
+    &:hover .msg-actions, &.menu-open .msg-actions { opacity: 1; }
+  }
+
+  .bubble {
+    display: flex;
+    flex-direction: column; // Text on top, Meta on bottom
+    max-width: 440px;
+    padding: 10px 14px 8px 14px; // Consistent padding
+    min-width: 100px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+
+    .msg-text {
+      font-size: 14.5px;
+      line-height: 1.5;
+      margin-bottom: 4px; // Space between text and time
+    }
+
+    .msg-meta-inside {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      align-self: flex-end; // Force to bottom right
+
+      .msg-time {
+        font-size: 10px;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  /* DROPDOWN MENU STYLING */
+  .msg-menu {
+    position: absolute;
+    top: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid var(--ig-border);
+    padding: 4px;
+    z-index: 1000;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+
+    button {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--ig-text-primary);
+
+      &:hover { background: #f5f5f5; }
+      &.danger { color: #ed4956; font-weight: 500; }
+    }
+  }
+}
+
+/* Typing Animation Bubble */
+.typing-indicator {
+  background: var(--ig-light-gray);
+  padding: 12px 16px;
+  border-radius: 18px;
+  display: flex;
+  gap: 4px;
+  width: fit-content;
+
+  span {
+    width: 6px; height: 6px; background: #999; border-radius: 50%;
+    animation: bounce 1.3s infinite;
+    &:nth-child(2) { animation-delay: 0.15s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+  }
+}
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.chat-footer {
+  padding: 15px 20px;
+  background: #fff;
+  border-top: 1px solid var(--ig-border);
+
+  .input-container {
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 24px;
+    padding: 2px 8px;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--ig-text-secondary);
+
+  .empty-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--ig-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: var(--ig-text-primary);
+  }
+
+  h2 { font-weight: 500; color: var(--ig-text-primary); margin-bottom: 8px; }
+  p { font-size: 14px; max-width: 250px; text-align: center; }
+}

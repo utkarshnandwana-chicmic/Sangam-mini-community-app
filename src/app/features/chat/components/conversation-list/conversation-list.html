@@ -1,0 +1,43 @@
+<div class="sidebar-container">
+  <div class="sidebar-header">
+    <h1 class="current-user">Messages</h1>
+    <button class="new-chat-btn" (click)="openNewChat()" aria-label="New chat">
+      +
+    </button>
+  </div>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search chats"
+      [value]="searchQuery"
+      (input)="onSearchInput($event)" />
+    <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">x</button>
+  </div>
+
+  <div class="conversation-list" *ngIf="!loading && conversations.length > 0">
+    <div
+      class="conversation"
+      *ngFor="let conv of conversations"
+      (click)="selectConversation(conv)"
+      [class.active]="activeConversationId === conv._id">
+      <div class="avatar-wrapper">
+        <img [src]="conv.conversationImage || '/default-avatar.svg'" class="avatar" alt="Avatar" />
+      </div>
+
+      <div class="info">
+        <div class="name">{{ conv.conversationName }}</div>
+        <div class="last-message">
+          <span class="text">{{ conv.lastMessage?.message || 'No messages yet' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-state" *ngIf="loading">Loading recent chats...</div>
+  <div class="sidebar-state error" *ngIf="!loading && loadFailed">Could not load recent chats.</div>
+  <div class="sidebar-state" *ngIf="!loading && !loadFailed && conversations.length === 0">
+    {{ searchQuery ? 'No chats found.' : 'No recent chats yet.' }}
+  </div>
+</div>

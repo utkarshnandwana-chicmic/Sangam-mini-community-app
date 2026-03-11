@@ -50,5 +50,9 @@ export const API_ENDPOINTS = {
   },
   NOTIFICATION: {
     BASE: '/v1/notification'
+},
+CONVERSATION: {
+  GET: '/v1/conversation',
+  GET_ROOMS: '/v1/conversationRoom'
 }
 };
