@@ -1,0 +1,221 @@
+<div class="chat-wrapper">
+
+  <!-- ================= HEADER ================= -->
+
+  <header class="chat-header" *ngIf="conversation">
+
+    <div class="header-left">
+
+      <div class="avatar-container">
+        <img
+          [src]="conversation.conversationImage || '/default-avatar.svg'"
+          class="avatar"
+          alt="Profile"
+        />
+      </div>
+
+      <div class="text-info">
+
+        <span class="username">
+          {{ conversation.conversationName }}
+        </span>
+
+        <span class="status-text" [class.is-typing]="isUserTyping">
+          {{ isUserTyping ? 'typing...' : 'Active now' }}
+        </span>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- ================= MESSAGE LIST ================= -->
+
+  <main class="message-list" #scrollContainer>
+
+    <div
+      #messageRow
+      *ngFor="let msg of messages; trackBy: trackByMessage"
+      class="msg-row"
+      [class.own]="isOwnMessage(msg)"
+      [class.menu-open]="activeMessageMenu === msg._id"
+      [style.z-index]="activeMessageMenu === msg._id ? 100 : 1"
+      [attr.data-message-id]="msg._id"
+    >
+
+      <!-- MESSAGE ACTIONS -->
+
+      <div class="msg-actions">
+
+        <button
+          type="button"
+          class="action-trigger"
+          (click)="$event.stopPropagation(); toggleMenu(msg)"
+          aria-label="Message actions"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path
+              d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2
+              .9-2 2 .9 2 2 2zm0 2c-1.1
+              0-2 .9-2 2s.9 2 2 2
+              2-.9 2-2-.9-2-2-2zm0
+              6c-1.1 0-2 .9-2 2s.9
+              2 2 2 2-.9 2-2-.9-2-2-2z"
+            />
+          </svg>
+        </button>
+
+
+        <!-- ACTION MENU -->
+
+        <div
+          class="msg-menu"
+          *ngIf="activeMessageMenu === msg._id"
+          (click)="$event.stopPropagation()"
+        >
+
+          <button
+            type="button"
+            *ngIf="canEditMessage(msg)"
+            (click)="startEditMessage(msg)"
+          >
+            Edit
+          </button>
+
+          <button type="button" class="danger" (click)="deleteMessage(msg)">
+            Delete
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- MESSAGE BUBBLE -->
+
+      <div class="bubble-wrapper">
+
+        <div class="bubble">
+
+
+          <!-- MESSAGE TEXT -->
+
+          <div class="msg-text" *ngIf="editingMessageId !== msg._id">
+            {{ msg.message }}
+          </div>
+
+
+          <!-- EDIT MESSAGE -->
+
+          <div class="edit-container" *ngIf="editingMessageId === msg._id">
+
+            <input
+              class="edit-input"
+              [(ngModel)]="editingText"
+              placeholder="Edit message"
+            />
+
+            <div class="edit-actions">
+
+              <button class="save-btn" (click)="saveEditMessage(msg)">
+                Save
+              </button>
+
+              <button class="cancel-btn" (click)="cancelEditMessage()">
+                Cancel
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- MESSAGE META -->
+
+          <div class="msg-meta-inside">
+
+            <span class="msg-time">
+              {{ msg.createdAt | date:'h:mm a' }}
+            </span>
+
+
+            <!-- SEEN STATUS -->
+
+            <span class="seen-status" *ngIf="isOwnMessage(msg)">
+
+              <!-- SEEN -->
+
+              <svg
+                *ngIf="isMessageSeen(msg)"
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                fill="#4fc3f7"
+              >
+                <path
+                  d="M13.854 3.646a.5.5 0 0 1
+                  0 .708l-7 7a.5.5 0 0
+                  1-.708 0l-3.5-3.5a.5.5
+                  0 1 1 .708-.708L6.5
+                  10.293l6.646-6.647a.5.5
+                  0 0 1 .708 0z"
+                />
+                <path
+                  d="M10.354 3.646a.5.5 0 0 1
+                  0 .708l-7 7a.5.5 0 0
+                  1-.708 0l-3.5-3.5a.5.5
+                  0 1 1 .708-.708L2.5
+                  10.293l6.646-6.647a.5.5
+                  0 0 1 .708 0z"
+                />
+              </svg>
+
+
+              <!-- SENT -->
+
+              <svg
+                *ngIf="!isMessageSeen(msg)"
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                fill="currentColor"
+              >
+                <path
+                  d="M13.854 3.646a.5.5 0 0
+                  1 0 .708l-7 7a.5.5 0
+                  0 1-.708 0l-3.5-3.5a.5.5
+                  0 1 1 .708-.708L6.5
+                  10.293l6.646-6.647a.5.5
+                  0 0 1 .708 0z"
+                />
+              </svg>
+
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer class="chat-footer" *ngIf="conversation">
+
+    <!-- MessageInput now sends socket message directly -->
+
+    <app-message-input
+      [conversationId]="conversation._id"
+      (messageSent)="onMessageSent($event)">
+    </app-message-input>
+
+  </footer>
+
+</div>

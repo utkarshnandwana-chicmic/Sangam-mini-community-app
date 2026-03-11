@@ -7,7 +7,7 @@
   <mat-sidenav-content class="main-content-area">
     <app-header class="desktop-hidden"></app-header>
 
-    <main class="feed-container">
+    <main class="feed-container" [class.chat-feed-container]="isChatRoute()">
       <router-outlet></router-outlet>
     </main>
   </mat-sidenav-content>

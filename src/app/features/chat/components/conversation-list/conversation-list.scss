@@ -1,0 +1,149 @@
+.sidebar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  min-height: 60px;
+  border-bottom: 1px solid #efefef;
+
+  .current-user {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #262626;
+    letter-spacing: -0.02em;
+  }
+
+  .new-chat-btn {
+    width: 32px;
+    height: 32px;
+    background: #f4f4f4;
+    border: 1px solid #e5e5e5;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+    color: #262626;
+
+    &:hover {
+      background: #ececec;
+    }
+  }
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #efefef;
+
+  .search-input {
+    flex: 1;
+    border: 1px solid #dfdfdf;
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 13px;
+    outline: none;
+
+    &:focus {
+      border-color: #c8c8c8;
+    }
+  }
+
+  .clear-btn {
+    border: none;
+    background: #f2f2f2;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #666;
+  }
+}
+
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 4px;
+}
+
+.conversation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 8px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: #f7f7f7;
+  }
+
+  &.active {
+    background: #f0f0f0;
+  }
+
+  .avatar-wrapper {
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  .info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .last-message {
+      display: flex;
+      font-size: 12px;
+      color: #8e8e8e;
+      align-items: center;
+
+      .text {
+        flex: 1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+  }
+}
+
+.sidebar-state {
+  padding: 16px;
+  color: #8e8e8e;
+  font-size: 13px;
+
+  &.error {
+    color: #d93025;
+  }
+}

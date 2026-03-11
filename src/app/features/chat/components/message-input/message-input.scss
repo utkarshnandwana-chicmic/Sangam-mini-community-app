@@ -1,0 +1,40 @@
+.message-input {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid #dbdbdb;
+  border-radius: 22px;
+  background: #fff;
+  min-height: 44px;
+}
+
+input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 11px 6px;
+  font-size: 14px;
+  color: #262626;
+  background: transparent;
+
+  &::placeholder {
+    color: #8e8e8e;
+  }
+}
+
+button {
+  margin-left: 8px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: #0095f6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    color: #b2dffc;
+    cursor: default;
+  }
+}

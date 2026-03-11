@@ -38,6 +38,13 @@
   box-sizing: border-box;
 }
 
+.feed-container.chat-feed-container {
+  max-width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .main-content-area::-webkit-scrollbar {
   width: 8px;
 }

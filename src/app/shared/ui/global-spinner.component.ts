@@ -11,7 +11,7 @@ import { LoadingService } from '../../core/services/loading';
       <div class="spinner"></div>
     </div>
   `,
-  // styleUrls: ['./global-spinner.component.scss'],
+  styleUrl: './global-spinner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GlobalSpinnerComponent {
